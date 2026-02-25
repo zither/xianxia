@@ -36,62 +36,183 @@
 
         <!-- 主内容区 -->
         <main class="main-content">
-            <!-- 修炼区域 -->
-            <section class="panel cultivation-panel">
-                <h2>🧘 修炼</h2>
-                <div class="cultivation-status">
-                    <div class="status-item">
-                        <span>修为:</span>
-                        <span id="xiuwei">0</span>
-                    </div>
-                    <div class="status-item">
-                        <span>修炼速度:</span>
-                        <span id="cultivate-speed">+1/秒</span>
-                    </div>
-                </div>
-                <button class="btn-primary" id="btn-cultivate">
-                    <span class="btn-icon">🎯</span>
-                    <span>开始修炼</span>
-                </button>
-                <div class="auto-cultivate">
-                    <label>
-                        <input type="checkbox" id="auto-cultivate">
-                        自动修炼
-                    </label>
-                </div>
-            </section>
-
-            <!-- 功法区域 -->
-            <section class="panel skills-panel">
-                <h2>📜 功法</h2>
-                <div class="skills-list" id="skills-list">
-                    <!-- 功法列表 -->
-                </div>
-                <button class="btn-secondary" id="btn-learn-skill">学习功法</button>
-            </section>
-
-            <!-- 战斗区域 -->
-            <section class="panel battle-panel">
-                <h2>⚔️ 战斗</h2>
-                <div class="battle-info">
-                    <div class="enemy-display">
-                        <div class="enemy-name" id="enemy-name">lv.1 散修</div>
-                        <div class="enemy-hp">
-                            <div class="hp-bar">
-                                <div class="hp-fill" id="enemy-hp-fill"></div>
-                            </div>
-                            <span id="enemy-hp-text">10/10</span>
+            <!-- 主页 -->
+            <div id="panel-home">
+                <!-- 修炼区域 -->
+                <section class="panel cultivation-panel">
+                    <h2>🧘 修炼</h2>
+                    <div class="cultivation-status">
+                        <div class="status-item">
+                            <span>修为:</span>
+                            <span id="xiuwei">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span>修炼速度:</span>
+                            <span id="cultivate-speed">+1/秒</span>
                         </div>
                     </div>
-                </div>
-                <div class="battle-actions">
-                    <button class="btn-battle" id="btn-attack">攻击</button>
-                    <button class="btn-battle" id="btn-auto-battle">自动战斗</button>
-                </div>
-                <div class="battle-log" id="battle-log">
-                    <div class="log-entry">点击"攻击"开始战斗</div>
-                </div>
-            </section>
+                    <button class="btn-primary" id="btn-cultivate">
+                        <span class="btn-icon">🎯</span>
+                        <span>开始修炼</span>
+                    </button>
+                    <div class="auto-cultivate">
+                        <label>
+                            <input type="checkbox" id="auto-cultivate">
+                            自动修炼
+                        </label>
+                    </div>
+                </section>
+
+                <!-- 战斗区域 -->
+                <section class="panel battle-panel">
+                    <h2>⚔️ 战斗</h2>
+                    <div class="battle-info">
+                        <div class="enemy-display">
+                            <div class="enemy-name" id="enemy-name">lv.1 散修</div>
+                            <div class="enemy-hp">
+                                <div class="hp-bar">
+                                    <div class="hp-fill" id="enemy-hp-fill"></div>
+                                </div>
+                                <span id="enemy-hp-text">10/10</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="battle-actions">
+                        <button class="btn-battle" id="btn-attack">攻击</button>
+                        <button class="btn-battle" id="btn-auto-battle">自动战斗</button>
+                    </div>
+                    <div class="battle-log" id="battle-log">
+                        <div class="log-entry">点击"攻击"开始战斗</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 功法页面 -->
+            <div id="panel-skills" style="display: none;">
+                <section class="panel">
+                    <h2>📜 功法</h2>
+                    <div class="skills-list" id="skills-list">
+                        <!-- 功法列表 -->
+                    </div>
+                    <button class="btn-secondary" id="btn-learn-skill">学习功法</button>
+                </section>
+            </div>
+
+            <!-- 副本页面 -->
+            <div id="panel-dungeon" style="display: none;">
+                <section class="panel">
+                    <h2>🏰 副本</h2>
+                    <div class="dungeon-list">
+                        <div class="dungeon-item" onclick="enterDungeon(0)">
+                            <span class="dungeon-name">新手试炼</span>
+                            <span class="dungeon-desc">适合炼气期修士</span>
+                        </div>
+                        <div class="dungeon-item" onclick="enterDungeon(1)">
+                            <span class="dungeon-name">筑基秘境</span>
+                            <span class="dungeon-desc">适合筑基期修士</span>
+                        </div>
+                        <div class="dungeon-item" onclick="enterDungeon(2)">
+                            <span class="dungeon-name">金丹洞府</span>
+                            <span class="dungeon-desc">适合金丹期修士</span>
+                        </div>
+                        <div class="dungeon-item locked">
+                            <span class="dungeon-name">🔒 元婴战场</span>
+                            <span class="dungeon-desc">境界不足</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>⚔️ 装备商店</h2>
+                    <div class="shop-section">
+                        <h3>武器</h3>
+                        <div class="shop-item" id="equip-weapon">
+                            <span class="no-equip">未装备</span>
+                        </div>
+                        <button class="btn-shop" id="btn-weapon-shop">购买武器</button>
+                    </div>
+                    <div class="shop-section">
+                        <h3>防具</h3>
+                        <div class="shop-item" id="equip-armor">
+                            <span class="no-equip">未装备</span>
+                        </div>
+                        <button class="btn-shop" id="btn-armor-shop">购买防具</button>
+                    </div>
+                    <div class="shop-section">
+                        <h3>饰品</h3>
+                        <div class="shop-item" id="equip-accessory">
+                            <span class="no-equip">未装备</span>
+                        </div>
+                        <button class="btn-shop" id="btn-accessory-shop">购买饰品</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 我的页面 -->
+            <div id="panel-profile" style="display: none;">
+                <section class="panel">
+                    <h2>👤 角色信息</h2>
+                    <div class="profile-info">
+                        <div class="profile-avatar">🧑‍💻</div>
+                        <div class="profile-name" id="profile-nickname">修仙者</div>
+                        <div class="profile-realm" id="profile-realm">炼气期</div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>📊 属性</h2>
+                    <div class="attributes-list">
+                        <div class="attr-item">
+                            <span class="attr-name">根骨</span>
+                            <span class="attr-value" id="attr-rootBone">10</span>
+                            <span class="attr-effect">+修炼速度</span>
+                        </div>
+                        <div class="attr-item">
+                            <span class="attr-name">悟性</span>
+                            <span class="attr-value" id="attr-comprehension">10</span>
+                            <span class="attr-effect">+功法效果</span>
+                        </div>
+                        <div class="attr-item">
+                            <span class="attr-name">机遇</span>
+                            <span class="attr-value" id="attr-fortune">10</span>
+                            <span class="attr-effect">+掉落几率</span>
+                        </div>
+                        <div class="attr-item">
+                            <span class="attr-name">福源</span>
+                            <span class="attr-value" id="attr-blessing">10</span>
+                            <span class="attr-effect">+突破成功率</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>🎒 装备</h2>
+                    <div class="equipment-list">
+                        <div class="equip-slot">
+                            <span class="equip-label">武器</span>
+                            <span class="equip-value" id="equip-weapon">未装备</span>
+                            <button class="btn-small" id="btn-unequip-weapon">卸下</button>
+                        </div>
+                        <div class="equip-slot">
+                            <span class="equip-label">防具</span>
+                            <span class="equip-value" id="equip-armor">未装备</span>
+                            <button class="btn-small" id="btn-unequip-armor">卸下</button>
+                        </div>
+                        <div class="equip-slot">
+                            <span class="equip-label">饰品</span>
+                            <span class="equip-value" id="equip-accessory">未装备</span>
+                            <button class="btn-small" id="btn-unequip-accessory">卸下</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>⚙️ 设置</h2>
+                    <div class="settings-list">
+                        <button class="btn-secondary" id="btn-reset-game">重置游戏</button>
+                    </div>
+                </section>
+            </div>
         </main>
 
         <!-- 底部导航 -->
