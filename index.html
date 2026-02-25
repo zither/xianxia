@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>仙途 - 修仙挂机游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部状态栏 -->
+        <header class="status-bar">
+            <div class="player-info">
+                <span class="nickname" id="nickname">修仙者</span>
+                <span class="realm" id="realm">炼气期</span>
+            </div>
+            <div class="resources">
+                <div class="resource" title="灵气">
+                    <span class="icon">💎</span>
+                <span class="value" id="lingqi">0</span>
+                </div>
+                <div class="resource" title="灵石">
+                    <span class="icon">💰</span>
+                    <span class="value" id="lingshi">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 经验条 -->
+        <div class="exp-bar-container">
+            <div class="exp-bar" id="exp-bar">
+                <div class="exp-fill" id="exp-fill"></div>
+            </div>
+            <span class="exp-text" id="exp-text">0 / 100</span>
+        </div>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 修炼区域 -->
+            <section class="panel cultivation-panel">
+                <h2>🧘 修炼</h2>
+                <div class="cultivation-status">
+                    <div class="status-item">
+                        <span>修为:</span>
+                        <span id="xiuwei">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span>修炼速度:</span>
+                        <span id="cultivate-speed">+1/秒</span>
+                    </div>
+                </div>
+                <button class="btn-primary" id="btn-cultivate">
+                    <span class="btn-icon">🎯</span>
+                    <span>开始修炼</span>
+                </button>
+                <div class="auto-cultivate">
+                    <label>
+                        <input type="checkbox" id="auto-cultivate">
+                        自动修炼
+                    </label>
+                </div>
+            </section>
+
+            <!-- 功法区域 -->
+            <section class="panel skills-panel">
+                <h2>📜 功法</h2>
+                <div class="skills-list" id="skills-list">
+                    <!-- 功法列表 -->
+                </div>
+                <button class="btn-secondary" id="btn-learn-skill">学习功法</button>
+            </section>
+
+            <!-- 战斗区域 -->
+            <section class="panel battle-panel">
+                <h2>⚔️ 战斗</h2>
+                <div class="battle-info">
+                    <div class="enemy-display">
+                        <div class="enemy-name" id="enemy-name">lv.1 散修</div>
+                        <div class="enemy-hp">
+                            <div class="hp-bar">
+                                <div class="hp-fill" id="enemy-hp-fill"></div>
+                            </div>
+                            <span id="enemy-hp-text">10/10</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="battle-actions">
+                    <button class="btn-battle" id="btn-attack">攻击</button>
+                    <button class="btn-battle" id="btn-auto-battle">自动战斗</button>
+                </div>
+                <div class="battle-log" id="battle-log">
+                    <div class="log-entry">点击"攻击"开始战斗</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部导航 -->
+        <nav class="tab-bar">
+            <button class="tab active" data-tab="home">
+                <span class="tab-icon">🏠</span>
+                <span>主页</span>
+            </button>
+            <button class="tab" data-tab="skills">
+                <span class="tab-icon">📜</span>
+                <span>功法</span>
+            </button>
+            <button class="tab" data-tab="dungeon">
+                <span class="tab-icon">🏰</span>
+                <span>副本</span>
+            </button>
+            <button class="tab" data-tab="profile">
+                <span class="tab-icon">👤</span>
+                <span>我的</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">提示</h3>
+            <p id="modal-message"></p>
+            <button class="btn-primary" id="modal-confirm">确定</button>
+            <button class="btn-secondary" id="modal-cancel" style="display:none">取消</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
