@@ -148,6 +148,30 @@
                 </section>
             </div>
 
+            <!-- 成就页面 -->
+            <div id="panel-achievements" style="display: none;">
+                <section class="panel">
+                    <h2>🏆 成就</h2>
+                    <div class="achievements-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" id="stat-achievements">0</span>
+                            <span class="stat-label">已解锁</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="stat-enemies">0</span>
+                            <span class="stat-label">击败敌人</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="stat-dungeons">0</span>
+                            <span class="stat-label">通关副本</span>
+                        </div>
+                    </div>
+                    <div class="achievements-list" id="achievements-list">
+                        <!-- 成就列表 -->
+                    </div>
+                </section>
+            </div>
+
             <!-- 我的页面 -->
             <div id="panel-profile" style="display: none;">
                 <section class="panel">
@@ -166,23 +190,28 @@
                             <span class="attr-name">根骨</span>
                             <span class="attr-value" id="attr-rootBone">10</span>
                             <span class="attr-effect">+修炼速度</span>
+                            <button class="btn-small" onclick="upgradeAttribute('rootBone')">+</button>
                         </div>
                         <div class="attr-item">
                             <span class="attr-name">悟性</span>
                             <span class="attr-value" id="attr-comprehension">10</span>
                             <span class="attr-effect">+功法效果</span>
+                            <button class="btn-small" onclick="upgradeAttribute('comprehension')">+</button>
                         </div>
                         <div class="attr-item">
                             <span class="attr-name">机遇</span>
                             <span class="attr-value" id="attr-fortune">10</span>
                             <span class="attr-effect">+掉落几率</span>
+                            <button class="btn-small" onclick="upgradeAttribute('fortune')">+</button>
                         </div>
                         <div class="attr-item">
                             <span class="attr-name">福源</span>
                             <span class="attr-value" id="attr-blessing">10</span>
                             <span class="attr-effect">+突破成功率</span>
+                            <button class="btn-small" onclick="upgradeAttribute('blessing')">+</button>
                         </div>
                     </div>
+                    <p class="attr-tip" id="attr-tip">点击 + 提升属性（消耗灵石）</p>
                 </section>
 
                 <section class="panel">
@@ -228,6 +257,10 @@
             <button class="tab" data-tab="dungeon">
                 <span class="tab-icon">🏰</span>
                 <span>副本</span>
+            </button>
+            <button class="tab" data-tab="achievements">
+                <span class="tab-icon">🏆</span>
+                <span>成就</span>
             </button>
             <button class="tab" data-tab="profile">
                 <span class="tab-icon">👤</span>

@@ -393,8 +393,8 @@ body {
     display: flex;
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
-    padding: 8px 0;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    padding: 6px 0;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
 }
 
 .tab {
@@ -402,12 +402,12 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px;
+    gap: 2px;
+    padding: 6px 4px;
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -417,7 +417,7 @@ body {
 }
 
 .tab-icon {
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .tab:active {
@@ -650,6 +650,18 @@ body {
     text-align: right;
 }
 
+.attr-tip {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 8px;
+}
+
+.attr-item .btn-small {
+    min-width: 28px;
+    padding: 4px 6px;
+}
+
 /* 装备槽 */
 .equipment-list {
     display: flex;
@@ -710,6 +722,98 @@ body {
 #btn-reset-game:hover {
     background: var(--accent-red);
     color: white;
+}
+
+/* 成就页面 */
+.achievements-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: 8px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent-gold);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.achievements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+}
+
+.achievement-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.achievement-item.locked {
+    opacity: 0.6;
+}
+
+.achievement-item.unlocked {
+    border-color: var(--accent-gold);
+    background: rgba(255, 215, 0, 0.05);
+}
+
+.achievement-icon {
+    font-size: 28px;
+    min-width: 36px;
+    text-align: center;
+}
+
+.achievement-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.achievement-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.achievement-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.achievement-status {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--accent-gold);
+}
+
+.achievement-item.locked .achievement-status {
+    background: rgba(108, 122, 137, 0.2);
+    color: var(--text-muted);
 }
 
 /* 滚动条 */

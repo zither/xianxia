@@ -289,6 +289,13 @@ function updateAttributesPanel() {
             el.textContent = gameState.player[attr];
         }
     });
+    
+    // 更新属性提升提示
+    const tipEl = document.getElementById('attr-tip');
+    if (tipEl) {
+        const cost = getAttributeCost('rootBone');
+        tipEl.textContent = `点击 + 提升属性（下次消耗 ${cost} 灵石）`;
+    }
 }
 
 function updateEquipmentPanel() {
@@ -382,11 +389,19 @@ function doCultivate() {
     if (!gameState.isCultivating) return;
     
     const speed = getCultivateSpeed();
+    const lingqiGain = getLingqiGain();
+    
     gameState.player.xiuxei += speed;
-    gameState.player.lingqi += getLingqiGain();
+    gameState.player.lingqi += lingqiGain;
+    
+    // 统计修炼
+    gameState.stats.totalCultivate = (gameState.stats.totalCultivate || 0) + speed;
     
     // 检查是否需要突破
     checkRealmUp();
+    
+    // 检查成就
+    checkAchievements();
     
     updateUI();
     saveGame();
@@ -419,6 +434,9 @@ function attack() {
     
     addBattleLog(`对 ${gameState.currentEnemy.name} 造成 ${damage} 点伤害！`, 'damage');
     
+    // 统计伤害
+    gameState.stats.totalDamage = (gameState.stats.totalDamage || 0) + damage;
+    
     // 检查敌人是否死亡
     if (gameState.enemyHp <= 0) {
         const enemy = gameState.currentEnemy;
@@ -428,10 +446,20 @@ function attack() {
         gameState.player.exp += exp;
         gameState.player.lingshi += lingshi;
         
+        // 统计
+        gameState.stats.enemiesDefeated = (gameState.stats.enemiesDefeated || 0) + 1;
+        gameState.stats.consecutiveWins = (gameState.stats.consecutiveWins || 0) + 1;
+        
         addBattleLog(`击败 ${enemy.name}！获得 ${exp} 修为, ${lingshi} 灵石`, 'loot');
+        
+        // 检查成就
+        checkAchievements();
         
         // 立即刷新敌人
         spawnEnemy();
+    } else {
+        // 未击败敌人，连胜中断
+        gameState.stats.consecutiveWins = 0;
     }
     
     // 敌人反击
@@ -487,6 +515,45 @@ function learnSkill() {
     gameState.skills.push(skill.id);
     
     showModal('功法习得', `恭喜学会 ${skill.name}！\n${skill.desc}`);
+    
+    // 检查成就
+    gameState.autoCultivateUsed = true;
+    checkAchievements();
+    
+    updateUI();
+    saveGame();
+}
+
+// 属性提升系统
+const ATTRIBUTE_UPGRADE = {
+    rootBone: { name: '根骨', desc: '提升修炼速度', cost: 50, costMultiplier: 1.5 },
+    comprehension: { name: '悟性', desc: '提升功法效果', cost: 50, costMultiplier: 1.5 },
+    fortune: { name: '机遇', desc: '提升掉落几率', cost: 50, costMultiplier: 1.5 },
+    blessing: { name: '福源', desc: '提升突破成功率', cost: 50, costMultiplier: 1.5 }
+};
+
+function getAttributeCost(attr) {
+    const config = ATTRIBUTE_UPGRADE[attr];
+    const currentLevel = gameState.player[attr];
+    return Math.floor(config.cost * Math.pow(config.costMultiplier, currentLevel - 10));
+}
+
+function upgradeAttribute(attr) {
+    const config = ATTRIBUTE_UPGRADE[attr];
+    const cost = getAttributeCost(attr);
+    
+    if (gameState.player.lingshi < cost) {
+        showModal('灵石不足', `提升 ${config.name} 需要 ${cost} 灵石`);
+        return;
+    }
+    
+    gameState.player.lingshi -= cost;
+    gameState.player[attr]++;
+    
+    showModal('属性提升', `${config.name} +1\n${config.desc}\n当前: ${gameState.player[attr]}`);
+    
+    // 检查成就
+    checkAchievements();
     
     updateUI();
     saveGame();
@@ -595,6 +662,12 @@ function enterDungeon(dungeonIndex) {
             gameState.player.lingshi += dungeon.reward;
             gameState.player.exp += dungeon.reward * 2;
             
+            // 统计副本通关
+            gameState.stats.dungeonsCleared = (gameState.stats.dungeonsCleared || 0) + 1;
+            
+            // 检查成就
+            checkAchievements();
+            
             showModal('副本完成', `恭喜通关 ${dungeon.name}！\n获得 ${dungeon.reward} 灵石, ${dungeon.reward * 2} 修为`);
             updateUI();
             saveGame();
@@ -667,16 +740,177 @@ function hideModal() {
     document.getElementById('modal').classList.remove('show');
 }
 
-// ==================== 游戏循环 ====================
+// ==================== 成就系统 ====================
 
-function gameLoop() {
-    if (gameState.isCultivating) {
-        doCultivate();
+const ACHIEVEMENTS = [
+    { id: 'first_cultivate', name: '初入修仙', desc: '完成第一次修炼', check: (s) => s.player.xiuxei >= 1 },
+    { id: 'reach_qi', name: '引气入体', desc: '累计获得100点灵气', check: (s) => s.player.lingqi >= 100 },
+    { id: 'first_battle', name: '初战告捷', desc: '击败第一个敌人', check: (s) => s.stats.enemiesDefeated >= 1 },
+    { id: 'reach_zhuanke', name: '筑基成功', desc: '突破到筑基期', check: (s) => s.player.realm >= 1 },
+    { id: 'rich', name: '小有积蓄', desc: '拥有1000灵石', check: (s) => s.player.lingshi >= 1000 },
+    { id: 'millionaire', name: '灵石大亨', desc: '拥有10000灵石', check: (s) => s.player.lingshi >= 10000 },
+    { id: 'reach_jindan', name: '结成金丹', desc: '突破到金丹期', check: (s) => s.player.realm >= 2 },
+    { id: 'reach_yuanying', name: '元婴大成', desc: '突破到元婴期', check: (s) => s.player.realm >= 3 },
+    { id: 'skill_master', name: '功法小成', desc: '学会3种功法', check: (s) => s.skills.length >= 3 },
+    { id: 'equip_master', name: '全副武装', desc: '装备武器、防具、饰品', check: (s) => s.equipment.weapon && s.equipment.armor && s.equipment.accessory },
+    { id: 'killer', name: '斩妖除魔', desc: '击败100个敌人', check: (s) => (s.stats.enemiesDefeated || 0) >= 100 },
+    { id: 'dungeon_clear', name: '副本首通', desc: '通关任意副本', check: (s) => (s.stats.dungeonsCleared || 0) >= 1 },
+    { id: 'auto_cultivate', name: '自动修炼', desc: '使用自动修炼功能', check: (s) => s.autoCultivateUsed },
+    { id: 'auto_battle', name: '战斗达人', desc: '使用自动战斗功能', check: (s) => s.autoBattleUsed },
+    { id: 'realm_5', name: '化神期修士', desc: '突破到化神期', check: (s) => s.player.realm >= 4 },
+    { id: 'realm_8', name: '大乘期大能', desc: '突破到大乘期', check: (s) => s.player.realm >= 7 },
+    { id: 'legend', name: '传说仙人', desc: '突破到仙人境界', check: (s) => s.player.realm >= 9 },
+    { id: 'collector', name: '收藏家', desc: '拥有5件不同装备', check: (s) => getAllEquipment(s.equipment).length >= 5 },
+    { id: 'high_attr', name: '天赋异禀', desc: '单项属性超过30', check: (s) => Math.max(s.player.rootBone, s.player.comprehension, s.player.fortune, s.player.blessing) >= 30 },
+    { id: 'warrior', name: '百战百胜', desc: '连续击败10个敌人', check: (s) => (s.stats.consecutiveWins || 0) >= 10 }
+];
+
+function getAllEquipment(equipment) {
+    const items = [];
+    if (equipment.weapon) items.push(equipment.weapon);
+    if (equipment.armor) items.push(equipment.armor);
+    if (equipment.accessory) items.push(equipment.accessory);
+    return items;
+}
+
+// 初始化统计
+if (!gameState.stats) {
+    gameState.stats = {
+        enemiesDefeated: 0,
+        dungeonsCleared: 0,
+        totalDamage: 0,
+        totalCultivate: 0,
+        consecutiveWins: 0
+    };
+}
+
+// 初始化成就
+if (!gameState.achievements) {
+    gameState.achievements = [];
+}
+
+// 检查并解锁成就
+function checkAchievements() {
+    const newAchievements = [];
+    
+    ACHIEVEMENTS.forEach(ach => {
+        if (!gameState.achievements.includes(ach.id) && ach.check(gameState)) {
+            gameState.achievements.push(ach.id);
+            newAchievements.push(ach);
+        }
+    });
+    
+    // 显示新成就通知
+    if (newAchievements.length > 0) {
+        showAchievementNotification(newAchievements);
     }
     
-    if (gameState.autoBattle) {
-        attack();
+    return newAchievements;
+}
+
+function showAchievementNotification(achievements) {
+    achievements.forEach((ach, index) => {
+        setTimeout(() => {
+            showModal('🏆 成就解锁！', `【${ach.name}】\n${ach.desc}`);
+        }, index * 500);
+    });
+}
+
+function renderAchievements() {
+    const container = document.getElementById('achievements-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    ACHIEVEMENTS.forEach(ach => {
+        const unlocked = gameState.achievements.includes(ach.id);
+        const item = document.createElement('div');
+        item.className = `achievement-item ${unlocked ? 'unlocked' : 'locked'}`;
+        item.innerHTML = `
+            <div class="achievement-icon">${unlocked ? '🏆' : '🔒'}</div>
+            <div class="achievement-info">
+                <span class="achievement-name">${ach.name}</span>
+                <span class="achievement-desc">${ach.desc}</span>
+            </div>
+            <span class="achievement-status">${unlocked ? '已达成' : '未达成'}</span>
+        `;
+        container.appendChild(item);
+    });
+}
+
+function updateAchievementsStats() {
+    const statAchievements = document.getElementById('stat-achievements');
+    const statEnemies = document.getElementById('stat-enemies');
+    const statDungeons = document.getElementById('stat-dungeons');
+    
+    if (statAchievements) statAchievements.textContent = gameState.achievements.length;
+    if (statEnemies) statEnemies.textContent = formatNumber(gameState.stats?.enemiesDefeated || 0);
+    if (statDungeons) statDungeons.textContent = formatNumber(gameState.stats?.dungeonsCleared || 0);
+}
+
+// ==================== 离线收益 ====================
+
+let lastSaveTime = Date.now();
+
+function calculateOfflineEarnings() {
+    if (!gameState.lastPlayTime) return 0;
+    
+    const now = Date.now();
+    const offlineSeconds = Math.floor((now - gameState.lastPlayTime) / 1000);
+    
+    // 最多计算24小时的离线收益
+    const maxOfflineSeconds = 24 * 60 * 60;
+    const effectiveSeconds = Math.min(offlineSeconds, maxOfflineSeconds);
+    
+    if (effectiveSeconds < 60) return 0; // 少于1分钟不计
+    
+    // 计算收益
+    const speed = getCultivateSpeed();
+    const lingqiGain = getLingqiGain();
+    
+    const xiuxei = speed * effectiveSeconds;
+    const lingqi = lingqiGain * effectiveSeconds;
+    
+    return {
+        seconds: effectiveSeconds,
+        xiuxei: xiuxei,
+        lingqi: lingqi
+    };
+}
+
+function applyOfflineEarnings() {
+    const earnings = calculateOfflineEarnings();
+    
+    if (earnings.xiuxei > 0 || earnings.lingqi > 0) {
+        gameState.player.xiuxei += earnings.xiuxei;
+        gameState.player.lingqi += earnings.lingqi;
+        
+        showModal('📥 离线收益', 
+            `离线 ${formatOfflineTime(earnings.seconds)} 修炼收益：\n\n` +
+            `修为 +${formatNumber(earnings.xiuxei)}\n` +
+            `灵气 +${formatNumber(earnings.lingqi)}`
+        );
     }
+}
+
+// 离线收益时间格式化
+function formatOfflineTime(seconds) {
+    if (seconds >= 86400) {
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        return `${days}天${hours}小时`;
+    } else if (seconds >= 3600) {
+        return `${Math.floor(seconds / 3600)}小时${Math.floor((seconds % 3600) / 60)}分钟`;
+    } else if (seconds >= 60) {
+        return `${Math.floor(seconds / 60)}分钟`;
+    }
+    return `${seconds}秒`;
+}
+
+// 记录最后在线时间
+function recordPlayTime() {
+    gameState.lastPlayTime = Date.now();
+    saveGame();
 }
 
 // ==================== 初始化 ====================
@@ -685,25 +919,52 @@ function init() {
     // 加载存档
     loadGame();
     
+    // 初始化统计和成就（兼容旧存档）
+    if (!gameState.stats) gameState.stats = {};
+    if (!gameState.achievements) gameState.achievements = [];
+    
+    // 计算并应用离线收益
+    applyOfflineEarnings();
+    
     // 初始化敌人
     if (!gameState.currentEnemy) {
         spawnEnemy();
     }
     
+    // 记录开始时间
+    recordPlayTime();
+    
     // 绑定修炼事件
-    document.getElementById('btn-cultivate').addEventListener('click', startCultivate);
+    document.getElementById('btn-cultivate').addEventListener('click', () => {
+        startCultivate();
+        if (gameState.isCultivating) {
+            gameState.autoCultivateUsed = true;
+            checkAchievements();
+        }
+        saveGame();
+    });
     document.getElementById('auto-cultivate').addEventListener('change', (e) => {
         gameState.autoCultivate = e.target.checked;
         if (gameState.autoCultivate && !gameState.isCultivating) {
             startCultivate();
         }
+        gameState.autoCultivateUsed = true;
+        checkAchievements();
         saveGame();
     });
     
     // 绑定战斗事件
-    document.getElementById('btn-attack').addEventListener('click', attack);
+    document.getElementById('btn-attack').addEventListener('click', () => {
+        attack();
+        gameState.autoBattleUsed = true;
+        checkAchievements();
+    });
     document.getElementById('btn-auto-battle').addEventListener('click', () => {
         gameState.autoBattle = !gameState.autoBattle;
+        if (gameState.autoBattle) {
+            gameState.autoBattleUsed = true;
+            checkAchievements();
+        }
         updateUI();
         saveGame();
     });
@@ -728,6 +989,25 @@ function init() {
     initTabs();
     
     // 启动游戏循环 (1秒)
+    let loopCounter = 0;
+    function gameLoop() {
+        if (gameState.isCultivating) {
+            doCultivate();
+        }
+        
+        if (gameState.autoBattle) {
+            attack();
+        }
+        
+        // 每10秒保存一次并检查成就
+        loopCounter++;
+        if (loopCounter >= 10) {
+            loopCounter = 0;
+            recordPlayTime();
+            checkAchievements();
+        }
+    }
+    
     setInterval(gameLoop, 1000);
     
     // 首次保存
@@ -745,6 +1025,7 @@ function initTabs() {
         'home': document.getElementById('panel-home'),
         'skills': document.getElementById('panel-skills'),
         'dungeon': document.getElementById('panel-dungeon'),
+        'achievements': document.getElementById('panel-achievements'),
         'profile': document.getElementById('panel-profile')
     };
     
@@ -763,6 +1044,12 @@ function initTabs() {
                     panels[key].style.display = key === tabName ? 'block' : 'none';
                 }
             });
+            
+            // 成就页面特殊处理
+            if (tabName === 'achievements') {
+                renderAchievements();
+                updateAchievementsStats();
+            }
         });
     });
 }
