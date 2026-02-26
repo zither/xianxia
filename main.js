@@ -24,7 +24,7 @@ function init() {
     
     document.getElementById('auto-cultivate').addEventListener('change', (e) => {
         gameState.autoCultivate = e.target.checked;
-        if (gameState.autoCultivate && !gameState.isCultivating && !gameState.currentEnemy && !gameState.inDungeon) startCultivate();
+        if (gameState.autoCultivate && !gameState.isCultivating && !gameState.autoBattle && !gameState.inDungeon) startCultivate();
         gameState.autoCultivateUsed = true;
         checkAchievements();
         saveGame();
@@ -55,14 +55,12 @@ function init() {
     let loopCounter = 0;
     setInterval(() => {
         restoreStamina();
-        // 战斗和修炼互斥：战斗时自动停止修炼
-        // 敌人存在且血量>0时才视为战斗状态
-        const inCombat = gameState.currentEnemy && gameState.enemyHp > 0;
-        if (gameState.isCultivating && (inCombat || gameState.inDungeon)) {
+        // 战斗和修炼互斥：用autoBattle判断是否在战斗
+        if (gameState.isCultivating && (gameState.autoBattle || gameState.inDungeon)) {
             gameState.isCultivating = false;
             updateUI();
         }
-        if (gameState.isCultivating && !inCombat && !gameState.inDungeon) {
+        if (gameState.isCultivating && !gameState.autoBattle && !gameState.inDungeon) {
             doCultivate();
         }
         if (gameState.autoBattle) attack();
