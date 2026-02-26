@@ -363,7 +363,7 @@ function updateUI() {
         : '已满级';
     
     // 修炼状态
-    document.getElementById('xiuwei').textContent = formatNumber(gameState.player.xiuxei);
+    document.getElementById('xiuwei').textContent = formatNumber(gameState.player.exp);
     document.getElementById('cultivate-speed').textContent = `+${getCultivateSpeed()}/秒`;
     
     // 自动修炼状态
@@ -736,7 +736,8 @@ function doCultivate() {
     const speed = Math.floor(getCultivateSpeed() * efficiency);
     const lingqiGain = getLingqiGain();
     
-    gameState.player.xiuxei += speed;
+    // 修炼获得修为（统一用exp）
+    gameState.player.exp += speed;
     gameState.player.lingqi += lingqiGain;
     
     // ===== 新增：顿悟系统 =====
@@ -1254,7 +1255,7 @@ function hideModal() {
 // ==================== 成就系统 ====================
 
 const ACHIEVEMENTS = [
-    { id: 'first_cultivate', name: '初入修仙', desc: '完成第一次修炼', check: (s) => s.player.xiuxei >= 1 },
+    { id: 'first_cultivate', name: '初入修仙', desc: '完成第一次修炼', check: (s) => s.player.exp >= 1 },
     { id: 'reach_qi', name: '引气入体', desc: '累计获得100点灵气', check: (s) => s.player.lingqi >= 100 },
     { id: 'first_battle', name: '初战告捷', desc: '击败第一个敌人', check: (s) => s.stats.enemiesDefeated >= 1 },
     { id: 'reach_zhuanke', name: '筑基成功', desc: '突破到筑基期', check: (s) => s.player.realm >= 1 },
@@ -1397,7 +1398,7 @@ function calculateOfflineEarnings() {
     return {
         minutes: offlineMinutes,
         gameDays: effectiveDays,
-        xiuxei: xiuxei,
+        exp: xiuxei,
         lingqi: lingqi
     };
 }
@@ -1405,13 +1406,13 @@ function calculateOfflineEarnings() {
 function applyOfflineEarnings() {
     const earnings = calculateOfflineEarnings();
     
-    if (earnings.xiuxei > 0 || earnings.lingqi > 0) {
-        gameState.player.xiuxei += earnings.xiuxei;
+    if (earnings.exp > 0 || earnings.lingqi > 0) {
+        gameState.player.exp += earnings.exp;
         gameState.player.lingqi += earnings.lingqi;
         
         showModal('📥 离线收益', 
             `离线 ${earnings.minutes}分钟 = 游戏内 ${earnings.gameDays}天\n\n` +
-            `修为 +${formatNumber(earnings.xiuxei)}\n` +
+            `修为 +${formatNumber(earnings.exp)}\n` +
             `灵气 +${formatNumber(earnings.lingqi)}`
         );
     }
@@ -2206,7 +2207,7 @@ doCultivate = function() {
     const lingqiGain = getLingqiGain();
     const maxLingqi = gameState.player.maxLingqi || 100;
     
-    gameState.player.xiuxei += speed;
+    gameState.player.exp += speed;
     gameState.player.lingqi = Math.min(maxLingqi, gameState.player.lingqi + lingqiGain);
     
     // 修炼消耗饱食度和体力
