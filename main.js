@@ -5,7 +5,10 @@
 function init() {
     loadGame();
     
-    if (!gameState.currentEnemy) spawnEnemy();
+    // 只在第一次或没有敌人的时候生成
+    if (!gameState.currentEnemy || gameState.enemyHp <= 0) {
+        spawnEnemy();
+    }
     
     recordPlayTime();
     applyOfflineEarnings();
