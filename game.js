@@ -73,18 +73,26 @@ let gameState = {
         xiuxei: 0,
         lingqi: 0,
         lingshi: 0,
-        // 新增：角色属性
-        rootBone: 10,      // 根骨 - 影响修炼效率
-        comprehension: 10, // 悟性 - 影响功法领悟
-        fortune: 10,       // 机遇 - 影响掉落
-        blessing: 10       // 福源 - 影响突破成功率
+        // 真实感系统
+        hp: 100,           // 生命值
+        maxHp: 100,        // 最大生命值
+        hunger: 100,        // 饱食度 (0=饿死)
+        maxLingqi: 100,    // 灵气上限
+        energy: 100,        // 体力 (战斗消耗)
+        maxEnergy: 100,    // 最大体力
+        // 属性
+        rootBone: 10,
+        comprehension: 10,
+        fortune: 10,
+        blessing: 10,
+        // 境界瓶颈
+        bottleneck: 0       // 瓶颈值
     },
     skills: ['呼吸吐纳'],
-    // 新增：装备栏
     equipment: {
-        weapon: null,     // 武器
-        armor: null,      // 防具
-        accessory: null   // 饰品
+        weapon: null,
+        armor: null,
+        accessory: null
     },
     autoCultivate: false,
     autoBattle: false,
@@ -92,10 +100,16 @@ let gameState = {
     enemyHp: 0,
     isCultivating: false,
     isBattling: false,
-    // 新增：副本状态
     inDungeon: false,
     currentDungeon: null,
-    dungeonEnemiesDefeated: 0
+    dungeonEnemiesDefeated: 0,
+    // 今日次数
+    today: {
+        date: new Date().toDateString(),
+        eaten: 0,           // 吃饭次数
+        cultivated: 0,      // 修炼次数
+        battles: 0         // 战斗次数
+    }
 };
 
 // 副本战斗定时器引用（用于清除）
@@ -284,6 +298,9 @@ function updateUI() {
     
     // 更新装备面板
     updateEquipmentPanel();
+    
+    // 更新状态条
+    updateStatusBars();
 }
 
 function updateAttributesPanel() {
@@ -1048,6 +1065,9 @@ function init() {
     // 绑定功法事件
     document.getElementById('btn-learn-skill').addEventListener('click', learnSkill);
     
+    // 绑定吃饭事件
+    document.getElementById('btn-eat')?.addEventListener('click', eatFood);
+    
     // 绑定装备事件
     document.getElementById('btn-weapon-shop')?.addEventListener('click', () => openEquipmentShop('weapon'));
     document.getElementById('btn-armor-shop')?.addEventListener('click', () => openEquipmentShop('armor'));
@@ -1067,6 +1087,9 @@ function init() {
     // 启动游戏循环 (1秒)
     let loopCounter = 0;
     function gameLoop() {
+        // 恢复饱食度和体力
+        restoreStamina();
+        
         if (gameState.isCultivating) {
             doCultivate();
         }
@@ -1448,3 +1471,296 @@ function checkEventAchievements() {
         gameState.achievements.push('event_50');
     }
 }
+
+
+// ==================== 真实感修仙系统 ====================
+
+// 恢复饱食度和体力
+function restoreStamina() {
+    // 每10秒恢复一点饱食度
+    if (gameState.player.hunger < 100) {
+        gameState.player.hunger = Math.min(100, gameState.player.hunger + 0.5);
+    }
+    // 每10秒恢复体力
+    if (gameState.player.energy < gameState.player.maxEnergy) {
+        gameState.player.energy = Math.min(gameState.player.maxEnergy, gameState.player.energy + 1);
+    }
+}
+
+// 检查是否无法修炼/战斗
+function checkCanAct() {
+    // 饥饿检查
+    if (gameState.player.hunger <= 0) {
+        showModal('☠️ 饿死边缘', '你已经饿了几天了！快去吃点东西吧！\n\n没有饱食度无法修炼和战斗！');
+        gameState.isCultivating = false;
+        gameState.autoBattle = false;
+        return false;
+    }
+    // 体力检查
+    if (gameState.player.energy < 10) {
+        showModal('💨 体力不支', '你的体力已经耗尽了！\n\n休息一下再继续吧。');
+        gameState.isCultivating = false;
+        gameState.autoBattle = false;
+        return false;
+    }
+    // 生命值检查
+    if (gameState.player.hp <= 0) {
+        showModal('💀 重伤昏迷', '你被打成重伤，昏迷了过去！\n\n修为损失严重！');
+        gameState.player.hp = gameState.player.maxHp;
+        gameState.player.exp = Math.floor(gameState.player.exp * 0.8);
+        gameState.isCultivating = false;
+        gameState.autoBattle = false;
+        return false;
+    }
+    return true;
+}
+
+// 吃饭恢复
+function eatFood() {
+    // 检查今天吃饭次数
+    const today = new Date().toDateString();
+    if (gameState.today.date !== today) {
+        gameState.today.date = today;
+        gameState.today.eaten = 0;
+    }
+    
+    if (gameState.today.eaten >= 3) {
+        showModal('🍚 吃饱了', '今天已经吃了很多了，明天再来吧！');
+        return;
+    }
+    
+    const foods = [
+        { name: '粗茶淡饭', hunger: 20, cost: 5 },
+        { name: '灵米粥', hunger: 40, cost: 20 },
+        { name: '灵禽肉', hunger: 60, cost: 50 },
+        { name: '千年灵果', hunger: 100, cost: 200 }
+    ];
+    
+    let msg = '🍖 用餐\n\n';
+    foods.forEach((food, idx) => {
+        msg += `${idx + 1}. ${food.name} +${food.hunger}饱食度 (${food.cost}灵石)\n`;
+    });
+    msg += '\n输入序号选择（取消退出）';
+    
+    const choice = prompt(msg);
+    if (choice === null) return;
+    
+    const idx = parseInt(choice) - 1;
+    if (idx < 0 || idx >= foods.length) return;
+    
+    const food = foods[idx];
+    
+    if (gameState.player.lingshi < food.cost) {
+        showModal('💰 灵石不足', `需要 ${food.cost} 灵石`);
+        return;
+    }
+    
+    gameState.player.lingshi -= food.cost;
+    gameState.player.hunger = Math.min(100, gameState.player.hunger + food.hunger);
+    gameState.player.energy = Math.min(gameState.player.maxEnergy, gameState.player.energy + 20);
+    gameState.today.eaten++;
+    
+    showModal('🍽️ 用餐成功', `吃了 ${food.name}，饱食度 +${food.hunger}，体力 +20`);
+    updateUI();
+    saveGame();
+}
+
+// 境界瓶颈系统
+function checkBottleneck() {
+    const nextRealm = getNextRealm();
+    if (!nextRealm) return false;
+    
+    const realm = gameState.player.realm;
+    const expRequired = nextRealm.expReq;
+    const currentExp = gameState.player.exp;
+    const progress = currentExp / expRequired;
+    
+    // 瓶颈：当修为达到境界要求的80%时开始出现
+    if (progress >= 0.8 && gameState.player.bottleneck < 100) {
+        // 瓶颈增加
+        gameState.player.bottleneck = Math.min(100, (progress - 0.8) * 500);
+        
+        // 瓶颈高时，修炼效率下降
+        if (gameState.player.bottleneck > 50) {
+            const efficiency = 1 - (gameState.player.bottleneck - 50) / 100;
+            return efficiency;
+        }
+    } else {
+        // 瓶颈重置
+        gameState.player.bottleneck = 0;
+    }
+    
+    return 1; // 正常效率
+}
+
+// 突破境界（有失败概率）
+function breakthrough() {
+    const nextRealm = getNextRealm();
+    if (!nextRealm) {
+        showModal('🎉 已成仙人', '你已经是仙人了！');
+        return;
+    }
+    
+    if (gameState.player.exp < nextRealm.expReq) {
+        showModal('❌ 修为不足', `突破到 ${nextRealm.name} 需要 ${nextRealm.expReq} 修为\n当前: ${gameState.player.exp}`);
+        return;
+    }
+    
+    if (gameState.player.bottleneck < 80) {
+        showModal('⚠️ 瓶颈未破', '你的瓶颈还不够深厚，无法突破。\n\n继续修炼，当修为达到要求的80%时会触发瓶颈。');
+        return;
+    }
+    
+    // 计算突破成功率
+    const baseSuccess = 0.3; // 基础30%成功率
+    const blessingBonus = gameState.player.blessing * 0.02; // 福源加成
+    const realmPenalty = gameState.player.realm * 0.05; // 境界越高越难
+    const successRate = Math.max(0.1, Math.min(0.8, baseSuccess + blessingBonus - realmPenalty));
+    
+    if (Math.random() < successRate) {
+        // 突破成功
+        gameState.player.realm++;
+        gameState.player.exp -= nextRealm.expReq;
+        gameState.player.bottleneck = 0;
+        
+        // 境界提升，全属性恢复
+        gameState.player.maxHp += 50;
+        gameState.player.hp = gameState.player.maxHp;
+        gameState.player.maxLingqi += 100;
+        gameState.player.lingqi = gameState.player.maxLingqi;
+        gameState.player.maxEnergy += 20;
+        gameState.player.energy = gameState.player.maxEnergy;
+        
+        showModal('🎊 境界突破！', `恭喜突破到 ${getRealm().name}！\n\n修炼速度大幅提升！\n最大生命 +50，灵气上限 +100`);
+        
+        spawnEnemy();
+        checkAchievements();
+    } else {
+        // 突破失败
+        const expLoss = Math.floor(nextRealm.expReq * 0.3);
+        gameState.player.exp = Math.max(0, gameState.player.exp - expLoss);
+        gameState.player.bottleneck = 0;
+        
+        showModal('💔 突破失败', `突破失败！损失 ${expLoss} 修为。\n\n再接再厉！`);
+    }
+    
+    updateUI();
+    saveGame();
+}
+
+// 更新状态条显示
+function updateStatusBars() {
+    // 饱食度
+    const hungerEl = document.getElementById('hunger-bar');
+    if (hungerEl) {
+        hungerEl.style.width = gameState.player.hunger + '%';
+        hungerEl.style.background = gameState.player.hunger < 30 ? 'var(--accent-red)' : 
+                                     gameState.player.hunger < 60 ? 'var(--accent-gold)' : 'var(--accent-green)';
+    }
+    
+    // 体力
+    const energyEl = document.getElementById('energy-bar');
+    if (energyEl) {
+        energyEl.style.width = (gameState.player.energy / gameState.player.maxEnergy * 100) + '%';
+    }
+    
+    // 生命值
+    const hpEl = document.getElementById('hp-bar');
+    if (hpEl) {
+        hpEl.style.width = (gameState.player.hp / gameState.player.maxHp * 100) + '%';
+    }
+}
+
+// 修改修炼函数 - 消耗饱食度和体力
+const originalDoCultivate = doCultivate;
+doCultivate = function() {
+    if (!gameState.isCultivating) return;
+    if (!checkCanAct()) {
+        gameState.isCultivating = false;
+        updateUI();
+        return;
+    }
+    
+    // 瓶颈效率
+    const efficiency = checkBottleneck();
+    
+    const speed = Math.floor(getCultivateSpeed() * efficiency);
+    const lingqiGain = getLingqiGain();
+    
+    gameState.player.xiuxei += speed;
+    gameState.player.lingqi += Math.min(gameState.player.maxLingqi - gameState.player.lingqi, lingqiGain);
+    
+    // 修炼消耗饱食度和体力
+    gameState.player.hunger = Math.max(0, gameState.player.hunger - 0.5);
+    gameState.player.energy = Math.max(0, gameState.player.energy - 1);
+    
+    // 统计修炼
+    gameState.stats.totalCultivate = (gameState.stats.totalCultivate || 0) + speed;
+    
+    // 触发随机事件
+    triggerRandomEvent();
+    
+    // 检查是否需要突破
+    checkRealmUp();
+    
+    // 检查成就
+    checkAchievements();
+    
+    updateUI();
+    saveGame();
+};
+
+// 修改战斗函数 - 消耗体力
+const originalAttack = attack;
+attack = function() {
+    if (!gameState.currentEnemy) {
+        spawnEnemy();
+    }
+    
+    // 检查能否战斗
+    if (!checkCanAct()) {
+        gameState.autoBattle = false;
+        updateUI();
+        return;
+    }
+    
+    const damage = getDamage();
+    gameState.enemyHp -= damage;
+    
+    addBattleLog(`对 ${gameState.currentEnemy.name} 造成 ${damage} 点伤害！`, 'damage');
+    
+    // 统计伤害
+    gameState.stats.totalDamage = (gameState.stats.totalDamage || 0) + damage;
+    
+    // 战斗消耗体力
+    gameState.player.energy = Math.max(0, gameState.player.energy - 2);
+    
+    // 检查敌人是否死亡
+    if (gameState.enemyHp <= 0) {
+        const enemy = gameState.currentEnemy;
+        const exp = Math.floor(enemy.exp * (1 + gameState.player.realm * 0.2));
+        const lingshi = Math.floor(enemy.lingshi * (1 + gameState.player.realm * 0.2) * (1 + getFortuneBonus()));
+        
+        gameState.player.exp += exp;
+        gameState.player.lingshi += lingshi;
+        
+        // 统计
+        gameState.stats.enemiesDefeated = (gameState.stats.enemiesDefeated || 0) + 1;
+        gameState.stats.consecutiveWins = (gameState.stats.consecutiveWins || 0) + 1;
+        
+        addBattleLog(`击败 ${enemy.name}！获得 ${exp} 修为, ${lingshi} 灵石`, 'loot');
+        
+        checkAchievements();
+        
+        spawnEnemy();
+        gameState.enemyJustDefeated = true;
+    } else {
+        gameState.stats.consecutiveWins = 0;
+        gameState.enemyJustDefeated = false;
+    }
+    
+    enemyAttack();
+    
+    updateUI();
+    saveGame();
+};

@@ -26,8 +26,30 @@
             </div>
         </header>
 
-        <!-- 经验条 -->
+        <!-- 经验条和状态条 -->
         <div class="exp-bar-container">
+            <!-- 饱食度 -->
+            <div class="status-bar-item">
+                <span class="status-icon">🍚</span>
+                <div class="mini-bar">
+                    <div class="mini-bar-fill" id="hunger-bar" style="width: 100%; background: var(--accent-green);"></div>
+                </div>
+            </div>
+            <!-- 体力 -->
+            <div class="status-bar-item">
+                <span class="status-icon">⚡</span>
+                <div class="mini-bar">
+                    <div class="mini-bar-fill" id="energy-bar" style="width: 100%; background: var(--accent-blue);"></div>
+                </div>
+            </div>
+            <!-- 生命值 -->
+            <div class="status-bar-item">
+                <span class="status-icon">❤️</span>
+                <div class="mini-bar">
+                    <div class="mini-bar-fill" id="hp-bar" style="width: 100%; background: var(--accent-red);"></div>
+                </div>
+            </div>
+            <!-- 经验条 -->
             <div class="exp-bar" id="exp-bar">
                 <div class="exp-fill" id="exp-fill"></div>
             </div>
@@ -61,6 +83,10 @@
                             自动修炼
                         </label>
                     </div>
+                    <!-- 吃饭按钮 -->
+                    <button class="btn-secondary" id="btn-eat" style="margin-top: 8px;">
+                        🍖 用餐
+                    </button>
                 </section>
 
                 <!-- 战斗区域 -->

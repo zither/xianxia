@@ -850,3 +850,32 @@ body {
         box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
     }
 }
+
+
+/* 状态条样式 */
+.status-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.status-icon {
+    font-size: 14px;
+    width: 20px;
+    text-align: center;
+}
+
+.mini-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-card);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mini-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
