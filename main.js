@@ -42,7 +42,9 @@ function init() {
         saveGame();
     });
     
-    document.getElementById('btn-learn-skill').addEventListener('click', learnSkill);
+    document.getElementById('btn-learn-skill').addEventListener('click', () => {
+        showModal('📚 功法系统', '功法无法直接购买！\n\n💡 获取途径：\n• 击败敌人掉落功法碎片\n• 副本首通奖励\n• 随机事件奇遇\n• 境界突破奖励\n• 神秘商人处购买\n\n收集碎片后可合成功法！');
+    });
     document.getElementById('btn-reset-game')?.addEventListener('click', resetGame);
     document.getElementById('modal-confirm').addEventListener('click', hideModal);
     document.getElementById('modal-cancel').addEventListener('click', hideModal);
