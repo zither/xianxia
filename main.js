@@ -31,6 +31,10 @@ function init() {
     });
     
     document.getElementById('btn-attack').addEventListener('click', () => {
+        if (gameState.isCultivating) {
+            showModal('提示', '修炼中无法攻击');
+            return;
+        }
         attack();
         gameState.autoBattleUsed = true;
         checkAchievements();

@@ -1,7 +1,7 @@
 /**
  * 仙途 - 修仙挂机游戏
  * 核心游戏逻辑
- * 版本: 1.0.11
+ * 版本: 1.0.12
  */
 
 // ==================== 游戏数据 ====================
@@ -1491,6 +1491,10 @@ function init() {
     
     // 绑定战斗事件
     document.getElementById('btn-attack').addEventListener('click', () => {
+        if (gameState.isCultivating) {
+            showModal('提示', '修炼中无法攻击');
+            return;
+        }
         attack();
         gameState.autoBattleUsed = true;
         checkAchievements();
