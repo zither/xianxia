@@ -4,7 +4,7 @@
 
 let dungeonBattleInterval = null;
 let lastEventTime = 0;
-const eventCooldown = 30;
+const eventCooldown = 60; // 事件冷却60秒
 
 function spawnEnemy() {
     const realm = Math.min(gameState.player.realm, ENEMIES.length - 1);

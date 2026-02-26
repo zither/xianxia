@@ -79,7 +79,7 @@ const RANDOM_EVENTS = [
     }}
 ];
 
-const EVENT_CHANCE = 0.08;
+const EVENT_CHANCE = 0.03; // 3% 概率触发
 
 function triggerRandomEvent() {
     const now = Date.now();
