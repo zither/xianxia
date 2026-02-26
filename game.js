@@ -1544,15 +1544,15 @@ function eatFood() {
     }
     
     const foods = [
-        { name: '粗茶淡饭', hunger: 20, cost: 5 },
-        { name: '灵米粥', hunger: 40, cost: 20 },
-        { name: '灵禽肉', hunger: 60, cost: 50 },
-        { name: '千年灵果', hunger: 100, cost: 200 }
+        { name: '粗茶淡饭', hunger: 20, energy: 10, cost: 5 },
+        { name: '灵米粥', hunger: 40, energy: 20, cost: 20 },
+        { name: '灵禽肉', hunger: 60, energy: 30, cost: 50 },
+        { name: '千年灵果', hunger: 100, energy: 50, cost: 200 }
     ];
     
     let msg = '🍖 用餐\n\n';
     foods.forEach((food, idx) => {
-        msg += `${idx + 1}. ${food.name} +${food.hunger}饱食度 (${food.cost}灵石)\n`;
+        msg += `${idx + 1}. ${food.name} 饱食+${food.hunger} 体力+${food.energy} (${food.cost}灵石)\n`;
     });
     msg += '\n输入序号选择（取消退出）';
     
@@ -1571,10 +1571,10 @@ function eatFood() {
     
     gameState.player.lingshi -= food.cost;
     gameState.player.hunger = Math.min(100, gameState.player.hunger + food.hunger);
-    gameState.player.energy = Math.min(gameState.player.maxEnergy, gameState.player.energy + 20);
+    gameState.player.energy = Math.min(gameState.player.maxEnergy, gameState.player.energy + food.energy);
     gameState.today.eaten++;
     
-    showModal('🍽️ 用餐成功', `吃了 ${food.name}，饱食度 +${food.hunger}，体力 +20`);
+    showModal('🍽️ 用餐成功', `吃了 ${food.name}\n饱食度 +${food.hunger}\n体力 +${food.energy}`);
     updateUI();
     saveGame();
 }
