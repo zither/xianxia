@@ -83,10 +83,6 @@
                             自动修炼
                         </label>
                     </div>
-                    <!-- 吃饭按钮 -->
-                    <button class="btn-secondary" id="btn-eat" style="margin-top: 8px;">
-                        🍖 用餐
-                    </button>
                 </section>
 
                 <!-- 战斗区域 -->
@@ -150,27 +146,27 @@
 
                 <section class="panel">
                     <h2>⚔️ 装备商店</h2>
-                    <div class="shop-section">
-                        <h3>武器</h3>
-                        <div class="shop-item" id="equip-weapon">
-                            <span class="no-equip">未装备</span>
-                        </div>
-                        <button class="btn-shop" id="btn-weapon-shop">购买武器</button>
+                    <div class="shop-list" id="shop-weapon">
+                        <h3>🗡️ 武器</h3>
+                        <div class="shop-items" id="shop-weapon-list"></div>
                     </div>
-                    <div class="shop-section">
-                        <h3>防具</h3>
-                        <div class="shop-item" id="equip-armor">
-                            <span class="no-equip">未装备</span>
-                        </div>
-                        <button class="btn-shop" id="btn-armor-shop">购买防具</button>
+                    <div class="shop-list" id="shop-armor">
+                        <h3>🛡️ 防具</h3>
+                        <div class="shop-items" id="shop-armor-list"></div>
                     </div>
-                    <div class="shop-section">
-                        <h3>饰品</h3>
-                        <div class="shop-item" id="equip-accessory">
-                            <span class="no-equip">未装备</span>
-                        </div>
-                        <button class="btn-shop" id="btn-accessory-shop">购买饰品</button>
+                    <div class="shop-list" id="shop-accessory">
+                        <h3>💍 饰品</h3>
+                        <div class="shop-items" id="shop-accessory-list"></div>
                     </div>
+                </section>
+            </div>
+
+            <!-- 食物商店 -->
+            <div id="panel-food" style="display: none;">
+                <section class="panel">
+                    <h2>🍖 餐馆</h2>
+                    <p class="shop-tip">每天可用餐3次</p>
+                    <div class="food-list" id="food-shop-list"></div>
                 </section>
             </div>
 
@@ -279,6 +275,10 @@
             <button class="tab" data-tab="skills">
                 <span class="tab-icon">📜</span>
                 <span>功法</span>
+            </button>
+            <button class="tab" data-tab="food">
+                <span class="tab-icon">🍖</span>
+                <span>餐馆</span>
             </button>
             <button class="tab" data-tab="dungeon">
                 <span class="tab-icon">🏰</span>

@@ -1079,16 +1079,7 @@ function init() {
     // 绑定功法事件
     document.getElementById('btn-learn-skill').addEventListener('click', learnSkill);
     
-    // 绑定吃饭事件
-    document.getElementById('btn-eat')?.addEventListener('click', eatFood);
-    
-    // 绑定装备事件
-    document.getElementById('btn-weapon-shop')?.addEventListener('click', () => openEquipmentShop('weapon'));
-    document.getElementById('btn-armor-shop')?.addEventListener('click', () => openEquipmentShop('armor'));
-    document.getElementById('btn-accessory-shop')?.addEventListener('click', () => openEquipmentShop('accessory'));
-    document.getElementById('btn-unequip-weapon')?.addEventListener('click', () => unequip('weapon'));
-    document.getElementById('btn-unequip-armor')?.addEventListener('click', () => unequip('armor'));
-    document.getElementById('btn-unequip-accessory')?.addEventListener('click', () => unequip('accessory'));
+    // 绑定设置事件
     document.getElementById('btn-reset-game')?.addEventListener('click', resetGame);
     
     // 绑定弹窗事件
@@ -1137,6 +1128,7 @@ function initTabs() {
     const panels = {
         'home': document.getElementById('panel-home'),
         'skills': document.getElementById('panel-skills'),
+        'food': document.getElementById('panel-food'),
         'dungeon': document.getElementById('panel-dungeon'),
         'achievements': document.getElementById('panel-achievements'),
         'profile': document.getElementById('panel-profile')
@@ -1162,6 +1154,16 @@ function initTabs() {
             if (tabName === 'achievements') {
                 renderAchievements();
                 updateAchievementsStats();
+            }
+            
+            // 食物商店特殊处理
+            if (tabName === 'food') {
+                renderFoodShop();
+            }
+            
+            // 装备商店特殊处理
+            if (tabName === 'dungeon') {
+                renderEquipmentShop();
             }
         });
     });
@@ -1786,3 +1788,153 @@ attack = function() {
     updateUI();
     saveGame();
 };
+
+
+// ==================== 商店系统 ====================
+
+// 食物数据
+const FOOD_ITEMS = [
+    { id: '粗茶淡饭', name: '粗茶淡饭', hunger: 20, energy: 10, cost: 5, icon: '🥣' },
+    { id: '灵米粥', name: '灵米粥', hunger: 40, energy: 20, cost: 20, icon: '🥣' },
+    { id: '灵禽肉', name: '灵禽肉', hunger: 60, energy: 30, cost: 50, icon: '🍖' },
+    { id: '千年灵果', name: '千年灵果', hunger: 100, energy: 50, cost: 200, icon: '🍎' }
+];
+
+// 渲染食物商店
+function renderFoodShop() {
+    const container = document.getElementById('food-shop-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // 检查今天吃饭次数
+    const today = new Date().toDateString();
+    if (gameState.today.date !== today) {
+        gameState.today.date = today;
+        gameState.today.eaten = 0;
+    }
+    
+    const remainingMeals = 3 - (gameState.today.eaten || 0);
+    
+    FOOD_ITEMS.forEach(food => {
+        const canBuy = gameState.player.lingshi >= food.cost && remainingMeals > 0;
+        
+        const item = document.createElement('div');
+        item.className = 'food-item';
+        item.innerHTML = `
+            <span class="food-icon">${food.icon}</span>
+            <div class="food-info">
+                <div class="food-name">${food.name}</div>
+                <div class="food-effects">饱食+${food.hunger} 体力+${food.energy}</div>
+            </div>
+            <span class="food-price">${food.cost}灵石</span>
+            <button class="food-buy-btn" ${canBuy ? '' : 'disabled'} onclick="buyFood('${food.id}')">
+                购买
+            </button>
+        `;
+        container.appendChild(item);
+    });
+}
+
+// 购买食物
+function buyFood(foodId) {
+    const food = FOOD_ITEMS.find(f => f.id === foodId);
+    if (!food) return;
+    
+    const today = new Date().toDateString();
+    if (gameState.today.date !== today) {
+        gameState.today.date = today;
+        gameState.today.eaten = 0;
+    }
+    
+    if (gameState.today.eaten >= 3) {
+        showModal('🍚 吃饱了', '今天已经吃了很多了，明天再来吧！');
+        return;
+    }
+    
+    if (gameState.player.lingshi < food.cost) {
+        showModal('💰 灵石不足', `需要 ${food.cost} 灵石`);
+        return;
+    }
+    
+    gameState.player.lingshi -= food.cost;
+    gameState.player.hunger = Math.min(100, gameState.player.hunger + food.hunger);
+    gameState.player.energy = Math.min(gameState.player.maxEnergy, gameState.player.energy + food.energy);
+    gameState.today.eaten++;
+    
+    showModal('🍽️ 用餐成功', `吃了 ${food.name}\n饱食度 +${food.hunger}\n体力 +${food.energy}`);
+    
+    renderFoodShop();
+    updateUI();
+    saveGame();
+}
+
+// 渲染装备商店
+function renderEquipmentShop() {
+    renderShopType('weapon', EQUIPMENT_LIB.weapon);
+    renderShopType('armor', EQUIPMENT_LIB.armor);
+    renderShopType('accessory', EQUIPMENT_LIB.accessory);
+}
+
+function renderShopType(type, items) {
+    const container = document.getElementById(`shop-${type}-list`);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const typeNames = { weapon: '武器', armor: '防具', accessory: '饰品' };
+    const statNames = { weapon: '攻击', armor: '防御', accessory: '防御' };
+    
+    items.forEach(item => {
+        const isEquipped = gameState.equipment[type] === item.id;
+        const canBuy = gameState.player.lingshi >= item.cost;
+        
+        const itemEl = document.createElement('div');
+        itemEl.className = `shop-item-card ${isEquipped ? 'equipped' : ''}`;
+        itemEl.innerHTML = `
+            <div class="shop-item-info">
+                <span class="shop-item-name">${item.name}</span>
+                <span class="shop-item-stats">${statNames[type]}: ${item.attack || item.defense}</span>
+            </div>
+            <div>
+                ${isEquipped 
+                    ? '<span class="shop-item-btn equipped">已装备</span>' 
+                    : `<button class="shop-item-btn" ${canBuy ? '' : 'disabled'} onclick="buyEquipment('${type}', '${item.id}')">购买</button>
+                       <span class="shop-item-price">${item.cost}</span>`
+                }
+            </div>
+        `;
+        container.appendChild(itemEl);
+    });
+}
+
+// 购买装备
+function buyEquipment(type, itemId) {
+    const items = EQUIPMENT_LIB[type];
+    if (!items) return;
+    
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    if (gameState.player.lingshi < item.cost) {
+        showModal('💰 灵石不足', `购买 ${item.name} 需要 ${item.cost} 灵石`);
+        return;
+    }
+    
+    // 如果已装备其他装备，返还一半灵石
+    if (gameState.equipment[type]) {
+        const oldItem = items.find(i => i.id === gameState.equipment[type]);
+        if (oldItem) {
+            gameState.player.lingshi += Math.floor(oldItem.cost / 2);
+        }
+    }
+    
+    gameState.player.lingshi -= item.cost;
+    gameState.equipment[type] = item.id;
+    
+    showModal('🎉 装备成功', `已装备 ${item.name}！`);
+    
+    renderEquipmentShop();
+    updateUI();
+    saveGame();
+}

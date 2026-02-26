@@ -879,3 +879,146 @@ body {
     border-radius: 3px;
     transition: width 0.3s ease;
 }
+
+
+/* 商店样式 */
+.shop-tip {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.shop-list {
+    margin-bottom: 16px;
+}
+
+.shop-list h3 {
+    font-size: 14px;
+    color: var(--accent-gold);
+    margin-bottom: 8px;
+}
+
+.shop-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.shop-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.shop-item-card.equipped {
+    border-color: var(--accent-green);
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.shop-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.shop-item-name {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.shop-item-stats {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.shop-item-price {
+    font-size: 13px;
+    color: var(--accent-gold);
+    font-weight: bold;
+}
+
+.shop-item-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: var(--gradient-purple);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+.shop-item-btn:disabled {
+    background: var(--bg-card);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.shop-item-btn.equipped {
+    background: var(--accent-green);
+}
+
+/* 食物商店 */
+.food-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.food-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.food-icon {
+    font-size: 28px;
+    margin-right: 10px;
+}
+
+.food-info {
+    flex: 1;
+}
+
+.food-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.food-effects {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.food-price {
+    font-size: 13px;
+    color: var(--accent-gold);
+    font-weight: bold;
+}
+
+.food-buy-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    background: var(--gradient-purple);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.food-buy-btn:disabled {
+    background: var(--bg-card);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
