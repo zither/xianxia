@@ -91,8 +91,15 @@ let gameState = {
     currentEnemy: null,
     enemyHp: 0,
     isCultivating: false,
-    isBattling: false
+    isBattling: false,
+    // 新增：副本状态
+    inDungeon: false,
+    currentDungeon: null,
+    dungeonEnemiesDefeated: 0
 };
+
+// 副本战斗定时器引用（用于清除）
+let dungeonBattleInterval = null;
 
 // ==================== 本地存储 ====================
 
@@ -457,9 +464,13 @@ function attack() {
         
         // 立即刷新敌人
         spawnEnemy();
+        
+        // 标记敌人刚刚被击败（供副本系统使用）
+        gameState.enemyJustDefeated = true;
     } else {
         // 未击败敌人，连胜中断
         gameState.stats.consecutiveWins = 0;
+        gameState.enemyJustDefeated = false;
     }
     
     // 敌人反击
@@ -640,50 +651,108 @@ function enterDungeon(dungeonIndex) {
     
     const dungeon = dungeons[dungeonIndex];
     
+    // 🔧 修复：检查是否已在副本中
+    if (gameState.inDungeon) {
+        showModal('提示', '你正在挑战副本中，请完成后再次进入！');
+        return;
+    }
+    
     if (gameState.player.realm < dungeon.minRealm) {
         showModal('境界不足', `需要 ${REALMS[dungeon.minRealm].name} 才能进入`);
         return;
     }
     
-    // 开始副本战斗
-    let enemiesDefeated = 0;
+    // 🔧 修复：保存当前状态，关闭自动战斗
     const originalAutoBattle = gameState.autoBattle;
-    gameState.autoBattle = true;
+    gameState.autoBattle = false;
+    
+    // 🔧 修复：设置副本状态
+    gameState.inDungeon = true;
+    gameState.currentDungeon = dungeon;
+    gameState.dungeonEnemiesDefeated = 0;
+    
+    // 禁用副本按钮
+    updateDungeonButtons(true);
     
     showModal('副本挑战', `正在挑战 ${dungeon.name}...\n击败 ${dungeon.enemies} 个敌人`);
     
-    // 模拟战斗
-    const battleInterval = setInterval(() => {
-        if (enemiesDefeated >= dungeon.enemies || !gameState.currentEnemy) {
-            clearInterval(battleInterval);
-            gameState.autoBattle = originalAutoBattle;
-            
-            // 发放奖励
-            gameState.player.lingshi += dungeon.reward;
-            gameState.player.exp += dungeon.reward * 2;
-            
-            // 统计副本通关
-            gameState.stats.dungeonsCleared = (gameState.stats.dungeonsCleared || 0) + 1;
-            
-            // 检查成就
-            checkAchievements();
-            
-            showModal('副本完成', `恭喜通关 ${dungeon.name}！\n获得 ${dungeon.reward} 灵石, ${dungeon.reward * 2} 修为`);
-            updateUI();
-            saveGame();
+    // 🔧 修复：保存定时器引用，确保只运行一个
+    if (dungeonBattleInterval) {
+        clearInterval(dungeonBattleInterval);
+    }
+    
+    dungeonBattleInterval = setInterval(() => {
+        // 🔧 修复：检查副本状态
+        if (!gameState.inDungeon) {
+            clearInterval(dungeonBattleInterval);
+            dungeonBattleInterval = null;
             return;
         }
         
+        // 执行攻击
         attack();
         
-        // 检查是否击败了敌人
-        if (gameState.enemyHp <= 0) {
-            enemiesDefeated++;
-            if (enemiesDefeated < dungeon.enemies) {
-                addBattleLog(`击败敌人 ${enemiesDefeated}/${dungeon.enemies}`, 'loot');
+        // 🔧 修复：使用标志检测敌人是否被击败
+        if (gameState.enemyJustDefeated) {
+            // 敌人被击败
+            gameState.dungeonEnemiesDefeated++;
+            gameState.enemyJustDefeated = false; // 重置标志
+            
+            addBattleLog(`击败敌人 ${gameState.dungeonEnemiesDefeated}/${dungeon.enemies}`, 'loot');
+            
+            // 检查是否通关
+            if (gameState.dungeonEnemiesDefeated >= dungeon.enemies) {
+                // 通关！
+                clearInterval(dungeonBattleInterval);
+                dungeonBattleInterval = null;
+                
+                // 🔧 修复：重置副本状态
+                gameState.inDungeon = false;
+                gameState.currentDungeon = null;
+                gameState.dungeonEnemiesDefeated = 0;
+                
+                // 恢复自动战斗状态
+                gameState.autoBattle = originalAutoBattle;
+                
+                // 启用副本按钮
+                updateDungeonButtons(false);
+                
+                // 发放奖励
+                gameState.player.lingshi += dungeon.reward;
+                gameState.player.exp += dungeon.reward * 2;
+                
+                // 统计副本通关
+                gameState.stats.dungeonsCleared = (gameState.stats.dungeonsCleared || 0) + 1;
+                
+                // 检查成就
+                checkAchievements();
+                
+                showModal('🎉 副本完成', `恭喜通关 ${dungeon.name}！\n获得 ${dungeon.reward} 灵石, ${dungeon.reward * 2} 修为`);
+                updateUI();
+                saveGame();
             }
         }
-    }, 500);
+    }, 1000); // 🔧 修复：1秒间隔，避免过快
+}
+
+// 🔧 新增：更新副本按钮状态
+function updateDungeonButtons(disabled) {
+    const dungeonIds = ['dungeon-0', 'dungeon-1', 'dungeon-2'];
+    
+    dungeonIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (disabled) {
+                el.classList.add('disabled');
+                el.onclick = null; // 移除点击事件
+            } else {
+                el.classList.remove('disabled');
+                // 恢复点击事件
+                const index = parseInt(id.split('-')[1]);
+                el.onclick = () => enterDungeon(index);
+            }
+        }
+    });
 }
 
 // 重置游戏

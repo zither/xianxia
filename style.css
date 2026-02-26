@@ -529,6 +529,14 @@ body {
     cursor: not-allowed;
 }
 
+/* 🔧 新增：副本按钮禁用状态 */
+.dungeon-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: var(--bg-card);
+}
+
 .dungeon-name {
     font-size: 14px;
     font-weight: bold;
