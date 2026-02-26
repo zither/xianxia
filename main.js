@@ -56,11 +56,13 @@ function init() {
     setInterval(() => {
         restoreStamina();
         // 战斗和修炼互斥：战斗时自动停止修炼
-        if (gameState.isCultivating && (gameState.currentEnemy || gameState.inDungeon)) {
+        // 敌人存在且血量>0时才视为战斗状态
+        const inCombat = gameState.currentEnemy && gameState.enemyHp > 0;
+        if (gameState.isCultivating && (inCombat || gameState.inDungeon)) {
             gameState.isCultivating = false;
             updateUI();
         }
-        if (gameState.isCultivating && !gameState.currentEnemy && !gameState.inDungeon) {
+        if (gameState.isCultivating && !inCombat && !gameState.inDungeon) {
             doCultivate();
         }
         if (gameState.autoBattle) attack();
