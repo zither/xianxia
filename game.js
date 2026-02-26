@@ -1,7 +1,7 @@
 /**
  * 仙途 - 修仙挂机游戏
  * 核心游戏逻辑
- * 版本: 1.0.12
+ * 版本: 1.0.13
  */
 
 // ==================== 游戏数据 ====================
@@ -384,7 +384,7 @@ function updateUI() {
     document.getElementById('btn-cultivate').classList.toggle('cultivating', gameState.isCultivating);
     
     // 功法列表
-    renderSkills();
+    renderSkillPanel();
     
     // 战斗状态
     if (gameState.currentEnemy) {
