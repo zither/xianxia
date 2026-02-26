@@ -147,3 +147,23 @@ function getRarityColor(rarity) {
     const colors = ['', '#888', '#4CAF50', '#2196F3', '#9C27B0', '#FF9800'];
     return colors[rarity] || '#888';
 }
+
+// 功法碎片掉落
+function dropSkillFragment(enemyRealm) {
+    const realm = Math.min(enemyRealm, 8);
+    const available = Object.entries(SKILL_FRAGMENTS).filter(([id, frag]) => frag.realmMin <= realm);
+    if (available.length === 0) return null;
+    
+    let total = available.reduce((sum, [id, frag]) => sum + frag.dropRate * 1000, 0);
+    let random = Math.random() * total;
+    
+    for (const [fragmentId, fragment] of available) {
+        random -= fragment.dropRate * 1000;
+        if (random <= 0) {
+            gameState.skillFragments = gameState.skillFragments || {};
+            gameState.skillFragments[fragmentId] = (gameState.skillFragments[fragmentId] || 0) + 1;
+            return fragmentId;
+        }
+    }
+    return null;
+}
