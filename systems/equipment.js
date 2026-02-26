@@ -142,69 +142,109 @@ function renderInventory() {
     const container = document.getElementById('inventory-list');
     if (!container) return;
     
-    let html = '<h3>Owned Skills (' + (gameState.ownedSkills || []).length + ')</h3>';
-    html += '<div class="inventory-section">';
+    const gridSize = 24;
+    let html = '<div class="inventory-grid">';
     
-    const ownedSkills = gameState.ownedSkills || [];
-    if (ownedSkills.length === 0) {
-        html += '<div class="empty-tip">No skills yet. Defeat enemies to get fragments!</div>';
-    } else {
-        ownedSkills.forEach(skillId => {
+    // Create 24 slots
+    for (let i = 0; i < gridSize; i++) {
+        let slotContent = '';
+        let slotClass = 'inventory-slot';
+        
+        // Check for skills in this slot
+        const skillIndex = i;
+        if (skillIndex < (gameState.ownedSkills || []).length) {
+            const skillId = gameState.ownedSkills[skillIndex];
             const skill = SKILL_LIB[skillId];
-            if (!skill) return;
-            const isEquipped = gameState.skills.includes(skillId);
-            html += '<div class="inventory-item">';
-            html += '<span class="item-name" style="color:' + getRarityColor(skill.rarity) + '">' + skill.name + '</span>';
-            html += '<span class="item-desc">' + skill.desc + '</span>';
-            html += '<span class="item-status">' + (isEquipped ? 'Equipped' : 'Not equipped') + '</span>';
-            html += '</div>';
-        });
-    }
-    html += '</div>';
-    
-    // Fragments
-    html += '<h3>Fragments</h3><div class="inventory-section">';
-    const fragments = gameState.skillFragments || {};
-    const owned = Object.entries(fragments).filter(([id, count]) => count > 0);
-    if (owned.length === 0) {
-        html += '<div class="empty-tip">No fragments yet</div>';
-    } else {
-        owned.forEach(([fragId, count]) => {
-            const frag = SKILL_FRAGMENTS[fragId];
-            if (!frag) return;
-            const skill = SKILL_LIB[frag.skillId];
-            if (!skill) return;
-            const need = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
-            html += '<div class="inventory-item">';
-            html += '<span class="item-name">' + fragId + '</span>';
-            html += '<span class="item-desc">' + count + '/' + need + '</span>';
-            if (count >= need) {
-                html += '<button class="btn-small" onclick="composeSkill(\'' + fragId + '\')">Compose</button>';
-            }
-            html += '</div>';
-        });
-    }
-    html += '</div>';
-    
-    // Equipment
-    html += '<h3>Equipment</h3><div class="inventory-section">';
-    ['weapon', 'armor', 'accessory'].forEach(type => {
-        const id = gameState.equipment[type];
-        if (id) {
-            const items = EQUIPMENT_LIB[type];
-            const item = items.find(e => e.id === id);
-            if (item) {
-                const typeName = {weapon:'Weapon',armor:'Armor',accessory:'Accessory'};
-                html += '<div class="inventory-item">';
-                html += '<span class="item-name">' + typeName[type] + ': ' + item.name + '</span>';
-                html += '<span class="item-desc">ATK:' + (item.attack||0) + ' DEF:' + (item.defense||0) + '</span>';
-                html += '</div>';
+            if (skill) {
+                const isEquipped = gameState.skills.includes(skillId);
+                slotContent = '<div class="slot-item" style="border-color:' + getRarityColor(skill.rarity) + '" onclick="showItemInfo(\'' + skillId + '\', \'skill\')">';
+                slotContent += '<span class="slot-icon">📜</span>';
+                slotContent += '<span class="slot-name">' + skill.name + '</span>';
+                if (isEquipped) slotContent += '<span class="slot-equipped">E</span>';
+                slotContent += '</div>';
+                slotClass += ' has-item';
             }
         }
-    });
+        
+        // Check for fragments (starting from slot 12)
+        if (!slotContent && i >= 12) {
+            const fragIndex = i - 12;
+            const fragments = Object.entries(gameState.skillFragments || {}).filter(([id, c]) => c > 0);
+            if (fragIndex < fragments.length) {
+                const [fragId, count] = fragments[fragIndex];
+                const frag = SKILL_FRAGMENTS[fragId];
+                if (frag) {
+                    const skill = SKILL_LIB[frag.skillId];
+                    const need = skill ? (FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3) : 3;
+                    slotContent = '<div class="slot-item fragment" onclick="showItemInfo(\'' + fragId + '\', \'fragment\')">';
+                    slotContent += '<span class="slot-icon">💎</span>';
+                    slotContent += '<span class="slot-name">' + fragId.replace(' Fragment','') + '</span>';
+                    slotContent += '<span class="slot-count">' + count + '</span>';
+                    if (count >= need) slotContent += '<span class="slot-can-compose">✓</span>';
+                    slotContent += '</div>';
+                    slotClass += ' has-item';
+                }
+            }
+        }
+        
+        // Equipment in last 3 slots
+        if (!slotContent && i >= 21) {
+            const equipIndex = i - 21;
+            const types = ['weapon', 'armor', 'accessory'];
+            if (equipIndex < types.length) {
+                const type = types[equipIndex];
+                const eqId = gameState.equipment[type];
+                if (eqId) {
+                    const items = EQUIPMENT_LIB[type];
+                    const item = items.find(e => e.id === eqId);
+                    if (item) {
+                        const icons = {weapon: '⚔️', armor: '🛡️', accessory: '💍'};
+                        slotContent = '<div class="slot-item equipment">';
+                        slotContent += '<span class="slot-icon">' + icons[type] + '</span>';
+                        slotContent += '<span class="slot-name">' + item.name + '</span>';
+                        slotContent += '<span class="slot-stat">' + (item.attack || item.defense) + '</span>';
+                        slotContent += '</div>';
+                        slotClass += ' has-item equipped';
+                    }
+                }
+            }
+        }
+        
+        html += '<div class="' + slotClass + '">' + slotContent + '</div>';
+    }
+    html += '</div>';
+    
+    html += '<div class="inventory-info">';
+    html += '<p>Skills: ' + (gameState.ownedSkills || []).length + ' | Fragments: ' + Object.keys(gameState.skillFragments || {}).filter(k => (gameState.skillFragments[k] || 0) > 0).length + '</p>';
     html += '</div>';
     
     container.innerHTML = html;
+}
+
+function showItemInfo(itemId, type) {
+    if (type === 'skill') {
+        const skill = SKILL_LIB[itemId];
+        if (!skill) return;
+        const isEquipped = gameState.skills.includes(itemId);
+        let msg = skill.name + '\n' + skill.desc + '\n\nRarity: ' + getRarityText(skill.rarity) + '\nType: ' + skill.type;
+        if (gameState.player.realm < skill.realmReq) {
+            msg += '\n\nRequires: ' + REALMS[skill.realmReq].name;
+        }
+        msg += '\n\n' + (isEquipped ? '[Equipped]' : (gameState.skills.length < gameState.maxSkillSlots && gameState.player.realm >= skill.realmReq) ? 'Click to equip' : 'Cannot equip');
+        showModal('Item Info', msg);
+    } else if (type === 'fragment') {
+        const frag = SKILL_FRAGMENTS[itemId];
+        if (!frag) return;
+        const skill = SKILL_LIB[frag.skillId];
+        if (!skill) return;
+        const count = gameState.skillFragments[itemId] || 0;
+        const need = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
+        let msg = itemId + '\n\nSkill: ' + skill.name + '\nRarity: ' + getRarityText(skill.rarity) + '\n\n' + count + ' / ' + need + ' fragments';
+        if (count >= need) {
+            msg += '\n\nClick to compose!';
+        }
+        showModal('Fragment', msg);
+    }
 }
 
 // 吃饭时间重置
