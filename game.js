@@ -404,6 +404,9 @@ function doCultivate() {
     // 统计修炼
     gameState.stats.totalCultivate = (gameState.stats.totalCultivate || 0) + speed;
     
+    // 触发随机事件
+    triggerRandomEvent();
+    
     // 检查是否需要突破
     checkRealmUp();
     
@@ -831,7 +834,11 @@ const ACHIEVEMENTS = [
     { id: 'legend', name: '传说仙人', desc: '突破到仙人境界', check: (s) => s.player.realm >= 9 },
     { id: 'collector', name: '收藏家', desc: '拥有5件不同装备', check: (s) => getAllEquipment(s.equipment).length >= 5 },
     { id: 'high_attr', name: '天赋异禀', desc: '单项属性超过30', check: (s) => Math.max(s.player.rootBone, s.player.comprehension, s.player.fortune, s.player.blessing) >= 30 },
-    { id: 'warrior', name: '百战百胜', desc: '连续击败10个敌人', check: (s) => (s.stats.consecutiveWins || 0) >= 10 }
+    { id: 'warrior', name: '百战百胜', desc: '连续击败10个敌人', check: (s) => (s.stats.consecutiveWins || 0) >= 10 },
+    // 随机事件成就
+    { id: 'event_1', name: '奇遇降临', desc: '触发第一次随机事件', check: (s) => (s.stats.eventsTriggered || 0) >= 1 },
+    { id: 'event_10', name: '历练老手', desc: '触发10次随机事件', check: (s) => (s.stats.eventsTriggered || 0) >= 10 },
+    { id: 'event_50', name: '天选之人', desc: '触发50次随机事件', check: (s) => (s.stats.eventsTriggered || 0) >= 50 }
 ];
 
 function getAllEquipment(equipment) {
@@ -1125,3 +1132,319 @@ function initTabs() {
 
 // 启动游戏
 document.addEventListener('DOMContentLoaded', init);
+
+
+// ==================== 随机事件系统 ====================
+
+// 随机事件配置
+const RANDOM_EVENTS = [
+    // 正面事件
+    {
+        id: 'find_lingshi',
+        name: '💰 路边拾遗',
+        desc: '在路边发现了一些灵石',
+        type: 'good',
+        weight: 15,
+        trigger: () => {
+            const amount = Math.floor(10 + Math.random() * 50 * (1 + gameState.player.realm * 0.5));
+            gameState.player.lingshi += amount;
+            return `捡到 ${amount} 灵石！`;
+        }
+    },
+    {
+        id: 'find_treasure',
+        name: '🎁 偶遇宝藏',
+        desc: '发现了一个神秘的宝箱',
+        type: 'good',
+        weight: 8,
+        trigger: () => {
+            const lingshi = Math.floor(50 + Math.random() * 100 * (1 + gameState.player.realm));
+            const exp = Math.floor(20 + Math.random() * 50 * (1 + gameState.player.realm));
+            gameState.player.lingshi += lingshi;
+            gameState.player.exp += exp;
+            return `获得 ${lingshi} 灵石和 ${exp} 修为！`;
+        }
+    },
+    {
+        id: 'sudden_insight',
+        name: '💡 顿悟',
+        desc: '修炼中突然有所领悟',
+        type: 'good',
+        weight: 10,
+        trigger: () => {
+            const exp = Math.floor(50 + Math.random() * 100 * (1 + gameState.player.realm * 0.5));
+            gameState.player.exp += exp;
+            return `修为大幅提升 +${exp}！`;
+        }
+    },
+    {
+        id: 'mystical_herb',
+        name: '🌿 发现灵草',
+        desc: '发现了一株珍贵的灵草',
+        type: 'good',
+        weight: 8,
+        trigger: () => {
+            const lingqi = Math.floor(30 + Math.random() * 70 * (1 + gameState.player.realm * 0.3));
+            gameState.player.lingqi += lingqi;
+            return `灵气 +${lingqi}！`;
+        }
+    },
+    {
+        id: 'stranger_gift',
+        name: '🎁 神秘礼物',
+        desc: '一位神秘修士送给了你礼物',
+        type: 'good',
+        weight: 5,
+        trigger: () => {
+            const lingshi = Math.floor(100 + Math.random() * 200 * (1 + gameState.player.realm));
+            const bonus = Math.random() > 0.5;
+            if (bonus) {
+                gameState.player.lingshi += lingshi;
+                return `获得神秘礼包：${lingshi} 灵石！`;
+            } else {
+                const exp = Math.floor(50 + Math.random() * 100);
+                gameState.player.exp += exp;
+                return `获得神秘礼包：${exp} 修为！`;
+            }
+        }
+    },
+    {
+        id: 'immortal_guidance',
+        name: '🧘 仙人指路',
+        desc: '遇到仙人指点迷津',
+        type: 'good',
+        weight: 3,
+        trigger: () => {
+            const attr = ['rootBone', 'comprehension', 'fortune', 'blessing'][Math.floor(Math.random() * 4)];
+            gameState.player[attr]++;
+            const attrNames = { rootBone: '根骨', comprehension: '悟性', fortune: '机遇', blessing: '福源' };
+            return `${attrNames[attr]} +1！仙人指点，受益匪浅！`;
+        }
+    },
+    // 中性事件
+    {
+        id: 'traveler_encounter',
+        name: '🚶 旅者相遇',
+        desc: '遇到一位云游修士',
+        type: 'neutral',
+        weight: 12,
+        trigger: () => {
+            const topics = [
+                '谈论修仙心得',
+                '交流功法奥秘',
+                '分享修炼经验',
+                '讲述修仙界的奇闻异事'
+            ];
+            const topic = topics[Math.floor(Math.random() * topics.length)];
+            const exp = Math.floor(10 + Math.random() * 30);
+            gameState.player.exp += exp;
+            return `${topic}，修为 +${exp}`;
+        }
+    },
+    {
+        id: 'old_book',
+        name: '📜 古籍残片',
+        desc: '发现一张古老的功法残片',
+        type: 'neutral',
+        weight: 6,
+        trigger: () => {
+            if (Math.random() > 0.7 && gameState.skills.length < SKILL_LIB.length) {
+                const unlearned = SKILL_LIB.filter(s => !gameState.skills.includes(s.id));
+                if (unlearned.length > 0) {
+                    const skill = unlearned[Math.floor(Math.random() * unlearned.length)];
+                    if (gameState.player.lingshi >= skill.cost) {
+                        gameState.player.lingshi -= skill.cost;
+                        gameState.skills.push(skill.id);
+                        return `学会新功法【${skill.name}】！`;
+                    }
+                }
+            }
+            const exp = Math.floor(20 + Math.random() * 40);
+            gameState.player.exp += exp;
+            return `从残片中领悟到一些心得，修为 +${exp}`;
+        }
+    },
+    // 负面事件
+    {
+        id: 'monster_attack',
+        name: '👹 妖兽袭击',
+        desc: '遭遇野生妖兽袭击',
+        type: 'bad',
+        weight: 10,
+        trigger: () => {
+            const damage = Math.floor(5 + Math.random() * 15 * (1 + gameState.player.realm * 0.3));
+            gameState.player.exp = Math.max(0, gameState.player.exp - damage);
+            return `被妖兽打伤，损失 ${damage} 修为！`;
+        }
+    },
+    {
+        id: 'trap',
+        name: '🕳️ 误入陷阱',
+        desc: '不小心触发了禁制',
+        type: 'bad',
+        weight: 8,
+        trigger: () => {
+            const loss = Math.floor(gameState.player.lingshi * 0.1);
+            gameState.player.lingshi = Math.max(0, gameState.player.lingshi - loss);
+            return `触发禁制，损失 ${loss} 灵石！`;
+        }
+    },
+    {
+        id: 'pickpocket',
+        name: '👤 遭遇窃贼',
+        desc: '被修仙界的窃贼盯上了',
+        type: 'bad',
+        weight: 6,
+        trigger: () => {
+            const loss = Math.floor(10 + Math.random() * 30);
+            gameState.player.lingshi = Math.max(0, gameState.player.lingshi - loss);
+            return `被盗贼偷走 ${loss} 灵石！`;
+        }
+    },
+    {
+        id: 'cultivation_fail',
+        name: '🔥 走火入魔',
+        desc: '修炼时心境不稳',
+        type: 'bad',
+        weight: 5,
+        trigger: () => {
+            const loss = Math.floor(gameState.player.exp * 0.05);
+            gameState.player.exp = Math.max(0, gameState.player.exp - loss);
+            return `真元紊乱，损失 ${loss} 修为！`;
+        }
+    },
+    // 特殊事件
+    {
+        id: 'secret_shop',
+        name: '🏪 神秘商人',
+        desc: '遇到一位神秘商人',
+        type: 'special',
+        weight: 4,
+        trigger: () => {
+            const items = [];
+            const allItems = [...EQUIPMENT_LIB.weapon, ...EQUIPMENT_LIB.armor, ...EQUIPMENT_LIB.accessory];
+            const count = Math.min(3, allItems.length);
+            
+            for (let i = 0; i < count; i++) {
+                const item = allItems[Math.floor(Math.random() * allItems.length)];
+                if (!items.find(i => i.id === item.id)) {
+                    items.push(item);
+                }
+            }
+            
+            let msg = '神秘商人出售以下物品：\n\n';
+            items.forEach((item, idx) => {
+                msg += `${idx + 1}. ${item.name} - ${item.cost} 灵石\n`;
+                msg += `   攻击:${item.attack || 0} 防御:${item.defense || 0}\n`;
+            });
+            msg += '\n输入序号购买（取消则离开）';
+            
+            const choice = prompt(msg);
+            if (choice !== null) {
+                const idx = parseInt(choice) - 1;
+                if (idx >= 0 && idx < items.length) {
+                    const item = items[idx];
+                    if (gameState.player.lingshi >= item.cost) {
+                        const type = EQUIPMENT_LIB.weapon.includes(item) ? 'weapon' : 
+                                    EQUIPMENT_LIB.armor.includes(item) ? 'armor' : 'accessory';
+                        gameState.player.lingshi -= item.cost;
+                        gameState.equipment[type] = item.id;
+                        return `购买了 ${item.name}！`;
+                    } else {
+                        return '灵石不足，无法购买';
+                    }
+                }
+            }
+            return '你离开了神秘商人';
+        }
+    },
+    {
+        id: 'trial',
+        name: '⚔️ 挑战者',
+        desc: '有人向你发起挑战',
+        type: 'special',
+        weight: 5,
+        trigger: () => {
+            const enemyRealm = Math.max(0, Math.min(gameState.player.realm + Math.floor(Math.random() * 3) - 1, ENEMIES.length - 1));
+            const enemy = ENEMIES[enemyRealm];
+            const hp = Math.floor(enemy.baseHp * (1 + enemyRealm * 0.5));
+            const damage = getDamage();
+            
+            if (damage >= hp * 0.5) {
+                const exp = Math.floor(enemy.exp * 1.5);
+                const lingshi = Math.floor(enemy.lingshi * 1.5);
+                gameState.player.exp += exp;
+                gameState.player.lingshi += lingshi;
+                return `击败挑战者！获得 ${exp} 修为, ${lingshi} 灵石！`;
+            } else {
+                const loss = Math.floor(gameState.player.exp * 0.1);
+                gameState.player.exp = Math.max(0, gameState.player.exp - loss);
+                return `挑战失败，损失 ${loss} 修为！`;
+            }
+        }
+    }
+];
+
+// 随机事件触发概率（每次修炼/战斗）
+const EVENT_CHANCE = 0.08; // 8% 概率触发
+
+// 记录上次事件时间
+let lastEventTime = 0;
+let eventCooldown = 30; // 事件冷却时间（秒）
+
+// 触发随机事件
+function triggerRandomEvent() {
+    const now = Date.now();
+    if (now - lastEventTime < eventCooldown * 1000) return false;
+    if (Math.random() > EVENT_CHANCE) return false;
+    
+    lastEventTime = now;
+    
+    // 根据权重计算概率
+    const totalWeight = RANDOM_EVENTS.reduce((sum, e) => sum + e.weight, 0);
+    let random = Math.random() * totalWeight;
+    let event = RANDOM_EVENTS[0];
+    
+    for (const e of RANDOM_EVENTS) {
+        random -= e.weight;
+        if (random <= 0) {
+            event = e;
+            break;
+        }
+    }
+    
+    // 根据境界过滤一些事件
+    if (gameState.player.realm < 2 && event.id === 'secret_shop') return false;
+    
+    // 触发事件
+    const result = event.trigger();
+    const typeLabels = { good: '🎉', neutral: '📢', bad: '💔', special: '⭐' };
+    
+    showModal(`${typeLabels[event.type]} ${event.name}`, result);
+    addBattleLog(`[${event.name}] ${result}`, event.type === 'good' ? 'loot' : event.type === 'bad' ? 'damage' : '');
+    
+    // 统计事件
+    gameState.stats.eventsTriggered = (gameState.stats.eventsTriggered || 0) + 1;
+    
+    // 事件成就检查
+    checkEventAchievements();
+    
+    updateUI();
+    saveGame();
+    return true;
+}
+
+// 事件相关成就
+function checkEventAchievements() {
+    const events = gameState.stats.eventsTriggered || 0;
+    if (events >= 1 && !gameState.achievements.includes('event_1')) {
+        gameState.achievements.push('event_1');
+        gameState.stats.firstEvent = true;
+    }
+    if (events >= 10 && !gameState.achievements.includes('event_10')) {
+        gameState.achievements.push('event_10');
+    }
+    if (events >= 50 && !gameState.achievements.includes('event_50')) {
+        gameState.achievements.push('event_50');
+    }
+}
