@@ -72,11 +72,21 @@
                             <span>修炼速度:</span>
                             <span id="cultivate-speed">+1/秒</span>
                         </div>
+                        <div class="status-item">
+                            <span>顿悟:</span>
+                            <span style="color: #ff9800;">2%/次</span>
+                        </div>
                     </div>
-                    <button class="btn-primary" id="btn-cultivate">
-                        <span class="btn-icon">🎯</span>
-                        <span>开始修炼</span>
-                    </button>
+                    <div class="cultivation-buttons">
+                        <button class="btn-primary" id="btn-cultivate">
+                            <span class="btn-icon">🎯</span>
+                            <span>开始修炼</span>
+                        </button>
+                        <button class="btn-secondary" onclick="openPotentialPanel()">
+                            <span class="btn-icon">🔥</span>
+                            <span>潜能激发</span>
+                        </button>
+                    </div>
                     <div class="auto-cultivate">
                         <label>
                             <input type="checkbox" id="auto-cultivate">

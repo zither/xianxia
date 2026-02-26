@@ -730,11 +730,20 @@ function startCultivate() {
 function doCultivate() {
     if (!gameState.isCultivating) return;
     
-    const speed = getCultivateSpeed();
+    // 瓶颈效率
+    const efficiency = checkBottleneck();
+    
+    const speed = Math.floor(getCultivateSpeed() * efficiency);
     const lingqiGain = getLingqiGain();
     
     gameState.player.xiuxei += speed;
     gameState.player.lingqi += lingqiGain;
+    
+    // ===== 新增：顿悟系统 =====
+    // 每次修炼有2%概率触发顿悟
+    if (Math.random() < 0.02) {
+        triggerEnlightenment();
+    }
     
     // 统计修炼
     gameState.stats.totalCultivate = (gameState.stats.totalCultivate || 0) + speed;
@@ -750,6 +759,120 @@ function doCultivate() {
     
     updateUI();
     saveGame();
+}
+
+// ===== 新增：顿悟系统 =====
+function triggerEnlightenment() {
+    const enlightenmentTypes = [
+        {
+            name: '💡 修为顿悟',
+            desc: '突然对修炼有了更深理解',
+            effect: () => {
+                const exp = Math.floor(50 + Math.random() * 100 * (1 + gameState.player.realm * 0.5));
+                gameState.player.exp += exp;
+                return `修为 +${exp}！`;
+            }
+        },
+        {
+            name: '💎 灵石顿悟',
+            desc: '天地灵气凝聚成灵石',
+            effect: () => {
+                const lingshi = Math.floor(20 + Math.random() * 50 * (1 + gameState.player.realm * 0.3));
+                gameState.player.lingshi += lingshi;
+                return `灵石 +${lingshi}！`;
+            }
+        },
+        {
+            name: '🧬 属性顿悟',
+            desc: '根骨/悟性/福源随机提升',
+            effect: () => {
+                const attrs = ['rootBone', 'comprehension', 'fortune', 'blessing'];
+                const attr = attrs[Math.floor(Math.random() * attrs.length)];
+                gameState.player[attr]++;
+                const attrNames = { rootBone: '根骨', comprehension: '悟性', fortune: '机遇', blessing: '福源' };
+                return `${attrNames[attr]} +1！`;
+            }
+        },
+        {
+            name: '⚡ 灵气爆发',
+            desc: '灵气涌入，境界松动',
+            effect: () => {
+                const lingqi = Math.floor(30 + Math.random() * 70 * (1 + gameState.player.realm * 0.3));
+                gameState.player.lingqi += lingqi;
+                gameState.player.lingqi = Math.min(gameState.player.maxLingqi, gameState.player.lingqi);
+                return `灵气 +${lingqi}！`;
+            }
+        },
+        {
+            name: '📦 功法碎片',
+            desc: '天地眷顾，获得功法碎片',
+            effect: () => {
+                const realm = Math.min(gameState.player.realm, 8);
+                const availableFragments = Object.entries(SKILL_FRAGMENTS).filter(([id, frag]) => frag.realmMin <= realm);
+                if (availableFragments.length > 0) {
+                    const [fragId] = availableFragments[Math.floor(Math.random() * availableFragments.length)];
+                    gameState.skillFragments = gameState.skillFragments || {};
+                    gameState.skillFragments[fragId] = (gameState.skillFragments[fragId] || 0) + 1;
+                    return `获得 ${fragId}！`;
+                }
+                return '什么也没找到...';
+            }
+        }
+    ];
+    
+    const enlightenment = enlightenmentTypes[Math.floor(Math.random() * enlightenmentTypes.length)];
+    const result = enlightenment.effect();
+    
+    showModal(`🌟 顿悟！${enlightenment.name}`, result);
+    addBattleLog(`【顿悟】${result}`, 'loot');
+    
+    // 成就检查
+    gameState.stats.enlightenments = (gameState.stats.enlightenments || 0) + 1;
+    checkAchievements();
+}
+
+// ===== 新增：潜能激发系统 =====
+function openPotentialPanel() {
+    let msg = '🔥 潜能激发\n\n';
+    msg += '消耗修为来激发潜能，提升属性！\n\n';
+    msg += `当前修为: ${formatNumber(gameState.player.exp)}\n\n`;
+    
+    const costs = {
+        rootBone: { name: '根骨', cost: 100, desc: '提升修炼速度', bonus: '根骨+1' },
+        comprehension: { name: '悟性', cost: 100, desc: '提升功法效果', bonus: '悟性+1' },
+        fortune: { name: '机遇', cost: 100, desc: '提升掉落几率', bonus: '机遇+1' },
+        blessing: { name: '福源', cost: 100, desc: '提升突破成功率', bonus: '福源+1' }
+    };
+    
+    Object.entries(costs).forEach(([key, cfg]) => {
+        msg += `${cfg.name}: 消耗 ${cfg.cost} 修为 → ${cfg.bonus}\n`;
+    });
+    
+    msg += '\n输入序号选择（0取消）';
+    
+    const choice = prompt(msg);
+    if (!choice || choice === '0') return;
+    
+    const keys = Object.keys(costs);
+    const idx = parseInt(choice) - 1;
+    
+    if (idx >= 0 && idx < keys.length) {
+        const attr = keys[idx];
+        const cfg = costs[attr];
+        
+        if (gameState.player.exp < cfg.cost) {
+            showModal('❌ 修为不足', `激发潜能需要 ${cfg.cost} 修为\n当前: ${gameState.player.exp}`);
+            return;
+        }
+        
+        gameState.player.exp -= cfg.cost;
+        gameState.player[attr]++;
+        
+        showModal('🔥 潜能激发成功', `${cfg.name} +1！\n${cfg.desc}`);
+        
+        updateUI();
+        saveGame();
+    }
 }
 
 // 战斗系统
@@ -2089,6 +2212,11 @@ doCultivate = function() {
     // 修炼消耗饱食度和体力
     gameState.player.hunger = Math.max(0, gameState.player.hunger - 0.5);
     gameState.player.energy = Math.max(0, gameState.player.energy - 1);
+    
+    // ===== 顿悟系统 =====
+    if (Math.random() < 0.02) {
+        triggerEnlightenment();
+    }
     
     // 统计修炼
     gameState.stats.totalCultivate = (gameState.stats.totalCultivate || 0) + speed;
