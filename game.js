@@ -19,14 +19,86 @@ const REALMS = [
     { name: '仙人', expReq: Infinity, multiplier: 512 }
 ];
 
-// 初始功法库
-const SKILL_LIB = [
-    { id: '呼吸吐纳', name: '呼吸吐纳', desc: '基础功法，提升修炼速度', type: 'passive', effect: { cultivateSpeed: 1 }, cost: 0 },
-    { id: '引气入体', name: '引气入体', desc: '增加灵气获取', type: 'passive', effect: { lingqiGain: 1 }, cost: 10 },
-    { id: '基础剑诀', name: '基础剑诀', desc: '攻击时有概率造成额外伤害', type: 'active', effect: { extraDamage: 0.2 }, cost: 20 },
-    { id: '灵气护盾', name: '灵气护盾', desc: '受到伤害时减免', type: 'passive', effect: { damageReduction: 0.1 }, cost: 30 },
-    { id: '聚灵阵', name: '聚灵阵', desc: '大幅提升灵气获取', type: 'passive', effect: { lingqiGain: 5 }, cost: 100 }
-];
+// 功法库 - 扩展到20+种，无法直接购买
+const SKILL_LIB = {
+    // 修炼类功法
+    '呼吸吐纳': { name: '呼吸吐纳', desc: '基础功法，提升修炼速度', type: 'cultivate', effect: { cultivateSpeed: 1 }, rarity: 1, realmReq: 0 },
+    '引气入体': { name: '引气入体', desc: '增加灵气获取', type: 'cultivate', effect: { lingqiGain: 1 }, rarity: 1, realmReq: 0 },
+    '聚灵阵': { name: '聚灵阵', desc: '大幅提升灵气获取', type: 'cultivate', effect: { lingqiGain: 5 }, rarity: 2, realmReq: 1 },
+    '九转丹诀': { name: '九转丹诀', desc: '修炼速度大幅提升', type: 'cultivate', effect: { cultivateSpeed: 5 }, rarity: 3, realmReq: 2 },
+    '混沌道经': { name: '混沌道经', desc: '修炼速度极致提升', type: 'cultivate', effect: { cultivateSpeed: 10 }, rarity: 4, realmReq: 4 },
+    '太初神诀': { name: '太初神诀', desc: '仙品功法，速度极致', type: 'cultivate', effect: { cultivateSpeed: 20 }, rarity: 5, realmReq: 7 },
+    
+    // 战斗攻击类
+    '基础剑诀': { name: '基础剑诀', desc: '攻击时有概率造成额外伤害', type: 'attack', effect: { extraDamage: 0.2 }, rarity: 1, realmReq: 0 },
+    '烈焰刀法': { name: '烈焰刀法', desc: '攻击附加火焰伤害', type: 'attack', effect: { extraDamage: 0.4 }, rarity: 2, realmReq: 1 },
+    '天雷破': { name: '天雷破', desc: '攻击有几率触发雷击', type: 'attack', effect: { extraDamage: 0.6 }, rarity: 3, realmReq: 3 },
+    '万剑归宗': { name: '万剑归宗', desc: '剑修至高功法', type: 'attack', effect: { extraDamage: 1.0 }, rarity: 4, realmReq: 5 },
+    '混沌剑意': { name: '混沌剑意', desc: '仙品剑诀', type: 'attack', effect: { extraDamage: 1.5 }, rarity: 5, realmReq: 8 },
+    
+    // 防御类
+    '灵气护盾': { name: '灵气护盾', desc: '受到伤害时减免', type: 'defense', effect: { damageReduction: 0.1 }, rarity: 1, realmReq: 0 },
+    '金刚不坏': { name: '金刚不坏', desc: '大幅提升防御', type: 'defense', effect: { damageReduction: 0.2 }, rarity: 2, realmReq: 2 },
+    '玄冰甲': { name: '玄冰甲', desc: '反弹部分伤害', type: 'defense', effect: { damageReduction: 0.3 }, rarity: 3, realmReq: 4 },
+    '混沌护体': { name: '混沌护体', desc: '仙品防御', type: 'defense', effect: { damageReduction: 0.5 }, rarity: 5, realmReq: 7 },
+    
+    // 辅助类
+    '神行百变': { name: '神行百变', desc: '提升移动和恢复速度', type: '辅助', effect: { energyRegen: 0.5 }, rarity: 2, realmReq: 1 },
+    '妙手回春': { name: '妙手回春', desc: '战斗时缓慢恢复生命', type: '辅助', effect: { hpRegen: 1 }, rarity: 3, realmReq: 3 },
+    '天眼通': { name: '天眼通', desc: '看穿敌人弱点，掉落增加', type: '辅助', effect: { fortuneBonus: 0.3 }, rarity: 3, realmReq: 2 },
+    '分神术': { name: '分神术', desc: '可同时装备更多功法', type: '辅助', effect: { skillSlot: 1 }, rarity: 4, realmReq: 5 },
+    
+    // 特殊类
+    '噬灵大法': { name: '噬灵大法', desc: '攻击时吸取灵气', type: '特殊', effect: { lifesteal: 0.1 }, rarity: 3, realmReq: 4 },
+    '燃命诀': { name: '燃命诀', desc: '牺牲生命换取极致攻击', type: '特殊', effect: { damageOnHp: 0.3 }, rarity: 4, realmReq: 6 },
+    '虚空挪移': { name: '虚空挪移', desc: '躲避攻击的概率提升', type: '特殊', effect: { dodge: 0.15 }, rarity: 3, realmReq: 3 },
+};
+
+// 功法碎片掉落配置
+const SKILL_FRAGMENTS = {
+    // 普通碎片 - 炼气期
+    '呼吸吐纳碎片': { skillId: '呼吸吐纳', dropRate: 0.1, realmMin: 0 },
+    '引气入体碎片': { skillId: '引气入体', dropRate: 0.08, realmMin: 0 },
+    '基础剑诀碎片': { skillId: '基础剑诀', dropRate: 0.1, realmMin: 0 },
+    '灵气护盾碎片': { skillId: '灵气护盾', dropRate: 0.08, realmMin: 0 },
+    
+    // 稀有碎片 - 筑基期
+    '聚灵阵碎片': { skillId: '聚灵阵', dropRate: 0.05, realmMin: 1 },
+    '烈焰刀法碎片': { skillId: '烈焰刀法', dropRate: 0.05, realmMin: 1 },
+    '神行百变碎片': { skillId: '神行百变', dropRate: 0.04, realmMin: 1 },
+    
+    // 珍贵碎片 - 金丹期
+    '九转丹诀碎片': { skillId: '九转丹诀', dropRate: 0.03, realmMin: 2 },
+    '天雷破碎片': { name: '天雷破', dropRate: 0.03, realmMin: 2 },
+    '金刚不坏碎片': { skillId: '金刚不坏', dropRate: 0.03, realmMin: 2 },
+    '天眼通碎片': { skillId: '天眼通', dropRate: 0.03, realmMin: 2 },
+    
+    // 稀有碎片 - 元婴期
+    '万剑归宗碎片': { skillId: '万剑归宗', dropRate: 0.02, realmMin: 3 },
+    '妙手回春碎片': { skillId: '妙手回春', dropRate: 0.02, realmMin: 3 },
+    '虚空挪移碎片': { skillId: '虚空挪移', dropRate: 0.02, realmMin: 3 },
+    
+    // 史诗碎片 - 化神期
+    '混沌道经碎片': { skillId: '混沌道经', dropRate: 0.015, realmMin: 4 },
+    '玄冰甲碎片': { skillId: '玄冰甲', dropRate: 0.015, realmMin: 4 },
+    '噬灵大法碎片': { skillId: '噬灵大法', dropRate: 0.01, realmMin: 4 },
+    
+    // 传说碎片
+    '分神术碎片': { skillId: '分神术', dropRate: 0.008, realmMin: 5 },
+    '燃命诀碎片': { skillId: '燃命诀', dropRate: 0.008, realmMin: 6 },
+    '混沌剑意碎片': { skillId: '混沌剑意', dropRate: 0.005, realmMin: 7 },
+    '混沌护体碎片': { skillId: '混沌护体', dropRate: 0.005, realmMin: 7 },
+    '太初神诀碎片': { skillId: '太初神诀', dropRate: 0.003, realmMin: 8 },
+};
+
+// 碎片合成所需数量
+const FRAGMENT合成数量 = {
+    1: 3,  // 普通3个
+    2: 5,  // 稀有5个
+    3: 8,  // 珍贵8个
+    4: 12, // 史诗12个
+    5: 20, // 传说20个
+};
 
 // 敌人配置
 const ENEMIES = [
@@ -88,7 +160,14 @@ let gameState = {
         // 境界瓶颈
         bottleneck: 0       // 瓶颈值
     },
+    // 已装备的功法（数组，最多5个）
     skills: ['呼吸吐纳'],
+    // 拥有的功法碎片
+    skillFragments: {},
+    // 拥有的完整功法
+    ownedSkills: ['呼吸吐纳'],
+    // 功法装备槽数量
+    maxSkillSlots: 3,
     equipment: {
         weapon: null,
         armor: null,
@@ -160,10 +239,10 @@ function getCultivateSpeed() {
     let base = 1;
     let multiplier = getRealm().multiplier;
     
-    // 计算被动功法加成
-    gameState.skills.forEach(skillId => {
-        const skill = SKILL_LIB.find(s => s.id === skillId);
-        if (skill && skill.effect.cultivateSpeed) {
+    // 计算被动功法加成（从已拥有的功法中计算）
+    gameState.ownedSkills.forEach(skillId => {
+        const skill = SKILL_LIB[skillId];
+        if (skill && skill.effect && skill.effect.cultivateSpeed) {
             base += skill.effect.cultivateSpeed;
         }
     });
@@ -176,9 +255,9 @@ function getCultivateSpeed() {
 
 function getLingqiGain() {
     let base = 1;
-    gameState.skills.forEach(skillId => {
-        const skill = SKILL_LIB.find(s => s.id === skillId);
-        if (skill && skill.effect.lingqiGain) {
+    gameState.ownedSkills.forEach(skillId => {
+        const skill = SKILL_LIB[skillId];
+        if (skill && skill.effect && skill.effect.lingqiGain) {
             base += skill.effect.lingqiGain;
         }
     });
@@ -189,10 +268,10 @@ function getDamage() {
     let base = 5;
     // 境界加成
     base += gameState.player.realm * 2;
-    // 功法加成
-    gameState.skills.forEach(skillId => {
-        const skill = SKILL_LIB.find(s => s.id === skillId);
-        if (skill && skill.effect.extraDamage) {
+    // 功法加成（从已拥有的功法计算）
+    gameState.ownedSkills.forEach(skillId => {
+        const skill = SKILL_LIB[skillId];
+        if (skill && skill.effect && skill.effect.extraDamage) {
             base *= (1 + skill.effect.extraDamage);
         }
     });
@@ -206,9 +285,9 @@ function getDamage() {
 
 function getDamageReduction() {
     let reduction = 0;
-    gameState.skills.forEach(skillId => {
-        const skill = SKILL_LIB.find(s => s.id === skillId);
-        if (skill && skill.effect.damageReduction) {
+    gameState.ownedSkills.forEach(skillId => {
+        const skill = SKILL_LIB[skillId];
+        if (skill && skill.effect && skill.effect.damageReduction) {
             reduction += skill.effect.damageReduction;
         }
     });
@@ -356,10 +435,13 @@ function updateEquipmentPanel() {
 
 function renderSkills() {
     const container = document.getElementById('skills-list');
+    if (!container) return;
+    
     container.innerHTML = '';
     
+    // 显示已装备的功法
     gameState.skills.forEach(skillId => {
-        const skill = SKILL_LIB.find(s => s.id === skillId);
+        const skill = SKILL_LIB[skillId];
         if (!skill) return;
         
         const item = document.createElement('div');
@@ -369,10 +451,232 @@ function renderSkills() {
                 <span class="skill-name">${skill.name}</span>
                 <span class="skill-desc">${skill.desc}</span>
             </div>
-            <span class="skill-level">${skill.type === 'passive' ? '被动' : '主动'}</span>
+            <span class="skill-level">${getRarityText(skill.rarity)}</span>
         `;
         container.appendChild(item);
     });
+    
+    // 如果没有装备功法
+    if (gameState.skills.length === 0) {
+        container.innerHTML = '<div class="empty-tip">还没有装备功法</div>';
+    }
+}
+
+// 获取功法稀有度文字
+function getRarityText(rarity) {
+    const texts = ['', '普通', '稀有', '珍贵', '史诗', '传说'];
+    return texts[rarity] || '普通';
+}
+
+// 获取功法稀有度颜色
+function getRarityColor(rarity) {
+    const colors = ['', '#888', '#4CAF50', '#2196F3', '#9C27B0', '#FF9800'];
+    return colors[rarity] || '#888';
+}
+
+// 渲染功法面板（包含碎片和合成）
+function renderSkillPanel() {
+    const container = document.getElementById('skills-list');
+    if (!container) return;
+    
+    let html = '<div class="skill-panel">';
+    
+    // 功法碎片仓库
+    html += '<div class="skill-section">';
+    html += '<h3>📦 功法碎片仓库</h3>';
+    html += '<div class="fragment-list">';
+    
+    const fragments = gameState.skillFragments || {};
+    const ownedFragments = Object.entries(fragments).filter(([id, count]) => count > 0);
+    
+    if (ownedFragments.length === 0) {
+        html += '<div class="empty-tip">还没有功法碎片</div>';
+    } else {
+        ownedFragments.forEach(([fragmentId, count]) => {
+            const fragment = SKILL_FRAGMENTS[fragmentId];
+            if (!fragment) return;
+            
+            const skill = SKILL_LIB[fragment.skillId];
+            if (!skill) return;
+            
+            const needCount = FRAGMENT合成数量[skill.rarity] || 3;
+            const canCompose = count >= needCount;
+            
+            html += `
+                <div class="fragment-item" style="border-color: ${getRarityColor(skill.rarity)}">
+                    <div class="fragment-info">
+                        <span class="fragment-name">${fragmentId.replace('碎片', '')}</span>
+                        <span class="fragment-count">${count}/${needCount}</span>
+                    </div>
+                    <button class="compose-btn ${canCompose ? '' : 'disabled'}" 
+                            onclick="composeSkill('${fragmentId}')"
+                            ${canCompose ? '' : 'disabled'}>
+                        ${canCompose ? '合成' : '不足'}
+                    </button>
+                </div>
+            `;
+        });
+    }
+    html += '</div></div>';
+    
+    // 已拥有的功法
+    html += '<div class="skill-section">';
+    html += '<h3>📖 已拥有功法</h3>';
+    html += '<div class="owned-skill-list">';
+    
+    const ownedSkills = gameState.ownedSkills || [];
+    if (ownedSkills.length === 0) {
+        html += '<div class="empty-tip">还没有任何功法</div>';
+    } else {
+        ownedSkills.forEach(skillId => {
+            const skill = SKILL_LIB[skillId];
+            if (!skill) return;
+            
+            const isEquipped = gameState.skills.includes(skillId);
+            const canEquip = !isEquipped && gameState.skills.length < gameState.maxSkillSlots;
+            const meetsRealmReq = gameState.player.realm >= skill.realmReq;
+            
+            html += `
+                <div class="owned-skill-item" style="border-left: 3px solid ${getRarityColor(skill.rarity)}">
+                    <div class="skill-info">
+                        <span class="skill-name">${skill.name}</span>
+                        <span class="skill-desc">${skill.desc}</span>
+                        ${!meetsRealmReq ? `<span class="realm-req">需要境界: ${REALMS[skill.realmReq].name}</span>` : ''}
+                    </div>
+                    <button class="equip-btn ${isEquipped ? 'equipped' : (!canEquip || !meetsRealmReq ? 'disabled' : '')}"
+                            onclick="equipSkill('${skillId}')"
+                            ${isEquipped || !canEquip || !meetsRealmReq ? 'disabled' : ''}>
+                        ${isEquipped ? '已装备' : '装备'}
+                    </button>
+                </div>
+            `;
+        });
+    }
+    html += '</div></div>';
+    
+    // 功法获取提示
+    html += '<div class="skill-section">';
+    html += '<h3>💡 功法获取途径</h3>';
+    html += '<div class="skill-tips">';
+    html += '<p>🎯 击败敌人有概率掉落功法碎片</p>';
+    html += '<p>🏆 副本首通奖励功法碎片</p>';
+    html += '<p>🎁 随机事件可获得功法</p>';
+    html += '<p>🌟 境界突破奖励功法</p>';
+    html += '<p>🏪 神秘商人有几率出售功法</p>';
+    html += '</div></div>';
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// 装备功法
+function equipSkill(skillId) {
+    const skill = SKILL_LIB[skillId];
+    if (!skill) return;
+    
+    // 检查境界要求
+    if (gameState.player.realm < skill.realmReq) {
+        showModal('⚠️ 境界不足', `需要 ${REALMS[skill.realmReq].name} 才能装备此功法`);
+        return;
+    }
+    
+    // 检查是否已装备
+    if (gameState.skills.includes(skillId)) {
+        showModal('提示', '此功法已经装备');
+        return;
+    }
+    
+    // 检查装备槽
+    if (gameState.skills.length >= gameState.maxSkillSlots) {
+        showModal('⚠️ 装备槽已满', `最多只能装备 ${gameState.maxSkillSlots} 个功法\n\n可以先卸下其他功法`);
+        return;
+    }
+    
+    // 装备功法
+    gameState.skills.push(skillId);
+    renderSkillPanel();
+    updateUI();
+    saveGame();
+    
+    showModal('✅ 功法装备', `已装备 ${skill.name}！\n${skill.desc}`);
+}
+
+// 卸下功法
+function unequipSkill(skillId) {
+    const index = gameState.skills.indexOf(skillId);
+    if (index === -1) return;
+    
+    gameState.skills.splice(index, 1);
+    renderSkillPanel();
+    updateUI();
+    saveGame();
+}
+
+// 合成功法
+function composeSkill(fragmentId) {
+    const fragment = SKILL_FRAGMENTS[fragmentId];
+    if (!fragment) return;
+    
+    const skillId = fragment.skillId;
+    const skill = SKILL_LIB[skillId];
+    if (!skill) return;
+    
+    const currentCount = gameState.skillFragments[fragmentId] || 0;
+    const needCount = FRAGMENT合成数量[skill.rarity] || 3;
+    
+    if (currentCount < needCount) {
+        showModal('❌ 碎片不足', `合成 ${skill.name} 需要 ${needCount} 个碎片\n当前拥有: ${currentCount} 个`);
+        return;
+    }
+    
+    // 扣除碎片
+    gameState.skillFragments[fragmentId] = currentCount - needCount;
+    
+    // 添加功法
+    if (!gameState.ownedSkills.includes(skillId)) {
+        gameState.ownedSkills.push(skillId);
+    }
+    
+    // 自动装备
+    if (gameState.skills.length < gameState.maxSkillSlots && gameState.player.realm >= skill.realmReq) {
+        gameState.skills.push(skillId);
+    }
+    
+    renderSkillPanel();
+    updateUI();
+    saveGame();
+    
+    showModal('🎉 功法合成成功！', `恭喜获得 ${skill.name}！\n\n${skill.desc}\n\n${gameState.skills.includes(skillId) ? '（已自动装备）' : '（可在功法面板装备）'}`);
+    
+    // 成就检查
+    if (gameState.ownedSkills.length >= 3) {
+        checkAchievements();
+    }
+}
+
+// 掉落功法碎片
+function dropSkillFragment(enemyRealm) {
+    const realm = Math.min(enemyRealm, 8);
+    
+    // 获取该境界可掉落的碎片
+    const availableFragments = Object.entries(SKILL_FRAGMENTS).filter(([id, frag]) => {
+        return frag.realmMin <= realm;
+    });
+    
+    // 按权重随机
+    let totalWeight = availableFragments.reduce((sum, [id, frag]) => sum + frag.dropRate * 1000, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const [fragmentId, fragment] of availableFragments) {
+        random -= fragment.dropRate * 1000;
+        if (random <= 0) {
+            // 获得碎片
+            gameState.skillFragments[fragmentId] = (gameState.skillFragments[fragmentId] || 0) + 1;
+            return fragmentId;
+        }
+    }
+    
+    return null;
 }
 
 function addBattleLog(msg, type = '') {
@@ -487,6 +791,12 @@ function attack() {
         gameState.player.exp += exp;
         gameState.player.lingshi += lingshi;
         
+        // 功法碎片掉落（战斗胜利必定掉落）
+        const fragmentId = dropSkillFragment(gameState.player.realm);
+        if (fragmentId) {
+            addBattleLog(`💎 获得 ${fragmentId}！`, 'loot');
+        }
+        
         // 统计
         gameState.stats.enemiesDefeated = (gameState.stats.enemiesDefeated || 0) + 1;
         gameState.stats.consecutiveWins = (gameState.stats.consecutiveWins || 0) + 1;
@@ -498,11 +808,8 @@ function attack() {
         
         // 立即刷新敌人
         spawnEnemy();
-        
-        // 标记敌人刚刚被击败（供副本系统使用）
         gameState.enemyJustDefeated = true;
     } else {
-        // 未击败敌人，连胜中断
         gameState.stats.consecutiveWins = 0;
         gameState.enemyJustDefeated = false;
     }
@@ -537,36 +844,9 @@ function enemyAttack() {
     }
 }
 
-// 功法系统
+// 功法系统 - 已移除直接购买
 function learnSkill() {
-    // 找出未学习的功法
-    const availableSkills = SKILL_LIB.filter(s => !gameState.skills.includes(s.id));
-    
-    if (availableSkills.length === 0) {
-        showModal('提示', '已学会所有功法！');
-        return;
-    }
-    
-    // 显示可学习的功法
-    const skill = availableSkills[0];
-    const cost = skill.cost;
-    
-    if (gameState.player.lingshi < cost) {
-        showModal('灵石不足', `学习 ${skill.name} 需要 ${cost} 灵石`);
-        return;
-    }
-    
-    gameState.player.lingshi -= cost;
-    gameState.skills.push(skill.id);
-    
-    showModal('功法习得', `恭喜学会 ${skill.name}！\n${skill.desc}`);
-    
-    // 检查成就
-    gameState.autoCultivateUsed = true;
-    checkAchievements();
-    
-    updateUI();
-    saveGame();
+    showModal('📚 功法系统', '功法无法直接购买！\n\n💡 获取途径：\n• 击败敌人掉落功法碎片\n• 副本首通奖励\n• 随机事件奇遇\n• 境界突破奖励\n• 神秘商人处购买\n\n收集碎片后可合成功法！');
 }
 
 // 属性提升系统
@@ -671,19 +951,24 @@ function unequip(type) {
 }
 
 // 副本系统
+const DUNGEONS = [
+    { name: '新手试炼', minRealm: 0, enemies: 3, reward: 50, fragment: '引气入体碎片' },
+    { name: '筑基秘境', minRealm: 1, enemies: 5, reward: 200, fragment: '聚灵阵碎片' },
+    { name: '金丹洞府', minRealm: 2, enemies: 8, reward: 1000, fragment: '九转丹诀碎片' },
+    { name: '元婴禁地', minRealm: 3, enemies: 10, reward: 3000, fragment: '万剑归宗碎片' },
+    { name: '化神遗迹', minRealm: 4, enemies: 15, reward: 10000, fragment: '混沌道经碎片' },
+    { name: '合体秘境', minRealm: 5, enemies: 20, reward: 30000, fragment: '分神术碎片' },
+    { name: '大乘天宫', minRealm: 6, enemies: 25, reward: 80000, fragment: '混沌剑意碎片' },
+    { name: '渡劫神坛', minRealm: 7, enemies: 30, reward: 200000, fragment: '太初神诀碎片' }
+];
+
 function enterDungeon(dungeonIndex) {
-    const dungeons = [
-        { name: '新手试炼', minRealm: 0, enemies: 3, reward: 50 },
-        { name: '筑基秘境', minRealm: 1, enemies: 5, reward: 200 },
-        { name: '金丹洞府', minRealm: 2, enemies: 8, reward: 1000 }
-    ];
-    
-    if (dungeonIndex >= dungeons.length) {
+    if (dungeonIndex >= DUNGEONS.length) {
         showModal('提示', '副本尚未解锁');
         return;
     }
     
-    const dungeon = dungeons[dungeonIndex];
+    const dungeon = DUNGEONS[dungeonIndex];
     
     // 🔧 修复：检查是否已在副本中
     if (gameState.inDungeon) {
@@ -1345,6 +1630,85 @@ const RANDOM_EVENTS = [
             const loss = Math.floor(gameState.player.exp * 0.05);
             gameState.player.exp = Math.max(0, gameState.player.exp - loss);
             return `真元紊乱，损失 ${loss} 修为！`;
+        }
+    },
+    // 功法相关事件
+    {
+        id: 'find_skill_fragment',
+        name: '📦 发现功法碎片',
+        desc: '在路边发现了功法碎片',
+        type: 'good',
+        weight: 8,
+        trigger: () => {
+            const realm = gameState.player.realm;
+            const availableFragments = Object.entries(SKILL_FRAGMENTS).filter(([id, frag]) => frag.realmMin <= realm);
+            if (availableFragments.length === 0) return '没有发现任何东西...';
+            
+            const randomIdx = Math.floor(Math.random() * availableFragments.length);
+            const [fragmentId, fragment] = availableFragments[randomIdx];
+            
+            gameState.skillFragments = gameState.skillFragments || {};
+            gameState.skillFragments[fragmentId] = (gameState.skillFragments[fragmentId] || 0) + 1;
+            
+            return `发现了 ${fragmentId}！`;
+        }
+    },
+    {
+        id: 'enemy_drop_fragment',
+        name: '⚔️ 敌人掉落碎片',
+        desc: '战斗中敌人掉落功法碎片',
+        type: 'good',
+        weight: 12,
+        trigger: () => {
+            const fragmentId = dropSkillFragment(gameState.player.realm);
+            if (fragmentId) {
+                return `战斗中获得了 ${fragmentId}！`;
+            }
+            return '敌人没有掉落任何东西...';
+        }
+    },
+    {
+        id: 'secret_skill',
+        name: '🏪 功法商人',
+        desc: '遇到出售功法的神秘商人',
+        type: 'special',
+        weight: 3,
+        trigger: () => {
+            // 只显示玩家境界可以学习的功法碎片
+            const realm = gameState.player.realm;
+            const availableFragments = Object.entries(SKILL_FRAGMENTS).filter(([id, frag]) => frag.realmMin <= realm + 1);
+            
+            // 随机选3个
+            const shuffled = availableFragments.sort(() => Math.random() - 0.5);
+            const selected = shuffled.slice(0, Math.min(3, shuffled.length));
+            
+            let msg = '功法商人出售功法碎片：\n\n';
+            selected.forEach(([fragId, frag], idx) => {
+                const skill = SKILL_LIB[frag.skillId];
+                const price = Math.floor(50 * Math.pow(2, skill.rarity));
+                msg += `${idx + 1}. ${fragId.replace('碎片', '')} - ${price}灵石\n`;
+            });
+            msg += '\n输入序号购买（0取消）';
+            
+            const choice = prompt(msg);
+            if (choice === null || choice === '0') return '你离开了功法商人';
+            
+            const idx = parseInt(choice) - 1;
+            if (idx >= 0 && idx < selected.length) {
+                const [fragId, frag] = selected[idx];
+                const skill = SKILL_LIB[frag.skillId];
+                const price = Math.floor(50 * Math.pow(2, skill.rarity));
+                
+                if (gameState.player.lingshi >= price) {
+                    gameState.player.lingshi -= price;
+                    gameState.skillFragments = gameState.skillFragments || {};
+                    gameState.skillFragments[fragId] = (gameState.skillFragments[fragId] || 0) + 1;
+                    return `购买了 ${fragId}！`;
+                } else {
+                    return '灵石不足，无法购买';
+                }
+            }
+            return '你离开了功法商人';
         }
     },
     // 特殊事件
