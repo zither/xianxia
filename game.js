@@ -1,7 +1,7 @@
 /**
  * 仙途 - 修仙挂机游戏
  * 核心游戏逻辑
- * 版本: 1.0.15
+ * 版本: 1.0.16
  */
 
 // ==================== 游戏数据 ====================
@@ -1510,7 +1510,7 @@ function init() {
     });
     
     // 绑定功法事件
-    document.getElementById('btn-learn-skill').addEventListener('click', learnSkill);
+    // document.getElementById('btn-learn-skill').addEventListener('click', learnSkill);
     
     // 绑定设置事件
     document.getElementById('btn-reset-game')?.addEventListener('click', resetGame);
