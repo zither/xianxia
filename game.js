@@ -216,6 +216,15 @@ function loadGame() {
             if (gameState.player.maxEnergy === undefined) gameState.player.maxEnergy = 100;
             if (gameState.player.bottleneck === undefined) gameState.player.bottleneck = 0;
             if (gameState.today === undefined) gameState.today = { date: new Date().toDateString(), eaten: 0, cultivated: 0, battles: 0 };
+            if (gameState.inDungeon === undefined) gameState.inDungeon = false;
+            
+            // 加载存档时，如果还在副本中则强制结束
+            if (gameState.inDungeon) {
+                gameState.inDungeon = false;
+                gameState.currentEnemy = null;
+                gameState.enemyHp = 0;
+                gameState.autoBattle = false;
+            }
             
             return true;
         } catch (e) {
@@ -1469,7 +1478,7 @@ function init() {
     });
     document.getElementById('auto-cultivate').addEventListener('change', (e) => {
         gameState.autoCultivate = e.target.checked;
-        if (gameState.autoCultivate && !gameState.isCultivating) {
+        if (gameState.autoCultivate && !gameState.isCultivating && !gameState.inDungeon) {
             startCultivate();
         }
         gameState.autoCultivateUsed = true;
