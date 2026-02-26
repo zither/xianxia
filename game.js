@@ -127,6 +127,17 @@ function loadGame() {
         try {
             const parsed = JSON.parse(saved);
             gameState = { ...gameState, ...parsed };
+            
+            // 初始化新字段（兼容旧存档）
+            if (gameState.player.hp === undefined) gameState.player.hp = 100;
+            if (gameState.player.maxHp === undefined) gameState.player.maxHp = 100;
+            if (gameState.player.hunger === undefined) gameState.player.hunger = 100;
+            if (gameState.player.maxLingqi === undefined) gameState.player.maxLingqi = 100;
+            if (gameState.player.energy === undefined) gameState.player.energy = 100;
+            if (gameState.player.maxEnergy === undefined) gameState.player.maxEnergy = 100;
+            if (gameState.player.bottleneck === undefined) gameState.player.bottleneck = 0;
+            if (gameState.today === undefined) gameState.today = { date: new Date().toDateString(), eaten: 0, cultivated: 0, battles: 0 };
+            
             return true;
         } catch (e) {
             console.error('存档读取失败:', e);
@@ -171,7 +182,7 @@ function getLingqiGain() {
             base += skill.effect.lingqiGain;
         }
     });
-    return base;
+    return base || 1;
 }
 
 function getDamage() {
@@ -235,17 +246,20 @@ function getDefenseBonus() {
 
 // 获取根骨加成（影响修炼速度）
 function getRootBoneBonus() {
-    return gameState.player.rootBone * 0.05; // 每点根骨+5%修炼速度
+    const rootBone = gameState.player.rootBone || 10;
+    return rootBone * 0.05; // 每点根骨+5%修炼速度
 }
 
 // 获取悟性加成（影响功法效果）
 function getComprehensionBonus() {
-    return gameState.player.comprehension * 0.03; // 每点悟性+3%功法效果
+    const comp = gameState.player.comprehension || 10;
+    return comp * 0.03; // 每点悟性+3%功法效果
 }
 
 // 获取福源加成（影响掉落）
 function getFortuneBonus() {
-    return gameState.player.fortune * 0.02; // 每点机遇+2%掉落
+    const fortune = gameState.player.fortune || 10;
+    return fortune * 0.02; // 每点机遇+2%掉落
 }
 
 // ==================== UI 更新 ====================
@@ -1650,24 +1664,31 @@ function breakthrough() {
 
 // 更新状态条显示
 function updateStatusBars() {
+    // 获取值，提供默认值
+    const hunger = gameState.player.hunger || 0;
+    const energy = gameState.player.energy || 0;
+    const maxEnergy = gameState.player.maxEnergy || 100;
+    const hp = gameState.player.hp || 0;
+    const maxHp = gameState.player.maxHp || 100;
+    
     // 饱食度
     const hungerEl = document.getElementById('hunger-bar');
     if (hungerEl) {
-        hungerEl.style.width = gameState.player.hunger + '%';
-        hungerEl.style.background = gameState.player.hunger < 30 ? 'var(--accent-red)' : 
-                                     gameState.player.hunger < 60 ? 'var(--accent-gold)' : 'var(--accent-green)';
+        hungerEl.style.width = Math.max(0, Math.min(100, hunger)) + '%';
+        hungerEl.style.background = hunger < 30 ? 'var(--accent-red)' : 
+                                     hunger < 60 ? 'var(--accent-gold)' : 'var(--accent-green)';
     }
     
     // 体力
     const energyEl = document.getElementById('energy-bar');
     if (energyEl) {
-        energyEl.style.width = (gameState.player.energy / gameState.player.maxEnergy * 100) + '%';
+        energyEl.style.width = Math.max(0, Math.min(100, (energy / maxEnergy * 100))) + '%';
     }
     
     // 生命值
     const hpEl = document.getElementById('hp-bar');
     if (hpEl) {
-        hpEl.style.width = (gameState.player.hp / gameState.player.maxHp * 100) + '%';
+        hpEl.style.width = Math.max(0, Math.min(100, (hp / maxHp * 100))) + '%';
     }
 }
 
@@ -1686,9 +1707,10 @@ doCultivate = function() {
     
     const speed = Math.floor(getCultivateSpeed() * efficiency);
     const lingqiGain = getLingqiGain();
+    const maxLingqi = gameState.player.maxLingqi || 100;
     
     gameState.player.xiuxei += speed;
-    gameState.player.lingqi += Math.min(gameState.player.maxLingqi - gameState.player.lingqi, lingqiGain);
+    gameState.player.lingqi = Math.min(maxLingqi, gameState.player.lingqi + lingqiGain);
     
     // 修炼消耗饱食度和体力
     gameState.player.hunger = Math.max(0, gameState.player.hunger - 0.5);
