@@ -1230,3 +1230,66 @@ body {
 .skill-desc { font-size: 12px; color: var(--text-secondary); }
 .skill-level { font-size: 12px; color: var(--accent-gold); }
 .empty-tip { text-align: center; color: var(--text-secondary); padding: 20px; }
+
+
+/* 功法页面重构 */
+.skill-page { padding: 10px; }
+.skill-slots { margin-bottom: 20px; }
+.skill-slots-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; color: var(--text-primary); }
+.skill-slots-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.skill-slot {
+    width: 100px;
+    min-height: 80px;
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.skill-slot.equipped { border-style: solid; }
+.skill-slot.empty { color: var(--text-secondary); font-size: 12px; }
+.skill-slot-name { font-weight: bold; font-size: 12px; color: var(--text-primary); margin-bottom: 4px; }
+.skill-slot-desc { font-size: 10px; color: var(--text-secondary); }
+.unequip-btn { margin-top: 4px; padding: 2px 6px; font-size: 10px; background: var(--bg-tertiary); border: none; border-radius: 3px; cursor: pointer; }
+
+.section-title { font-size: 16px; font-weight: bold; margin: 15px 0 10px; color: var(--text-primary); }
+.skill-section { margin-bottom: 20px; }
+
+.fragment-grid, .skill-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.fragment-card, .skill-card {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+}
+.fragment-icon { font-size: 24px; margin-bottom: 5px; }
+.fragment-name { font-weight: bold; color: var(--text-primary); font-size: 13px; }
+.fragment-progress { height: 4px; background: var(--bg-tertiary); border-radius: 2px; margin: 8px 0; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent-gold); transition: width 0.3s; }
+.fragment-count { font-size: 12px; color: var(--text-secondary); }
+.fragment-need { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+.skill-rarity { font-size: 10px; color: var(--accent-gold); margin-bottom: 4px; }
+.skill-name { font-weight: bold; color: var(--text-primary); font-size: 14px; margin-bottom: 4px; }
+.skill-desc { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; }
+.skill-req { font-size: 11px; color: var(--accent-red); }
+.skill-equipped { font-size: 12px; color: var(--accent-green); margin-top: 8px; }
+
+.compose-btn-full, .equip-btn-full {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.compose-btn-full { background: var(--accent-gold); color: #000; }
+.equip-btn-full { background: var(--accent-green); color: #fff; }
+
+.empty-card { grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--text-secondary); background: var(--bg-secondary); border-radius: 10px; }
+.empty-card small { font-size: 12px; opacity: 0.7; }

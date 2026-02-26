@@ -99,64 +99,102 @@ function renderSkillPanel() {
     const container = document.getElementById('skills-list');
     if (!container) return;
     
-    let html = '<div class="skill-panel">';
-    
-    // 获取已拥有的功法ID列表
     const ownedSkills = gameState.ownedSkills || [];
+    const equippedSkills = gameState.skills || [];
     
-    html += '<div class="skill-section"><h3>碎片仓库</h3><div class="fragment-list">';
+    let html = '<div class="skill-page">';
+    
+    // 顶部：功法槽位
+    html += '<div class="skill-slots">';
+    html += '<div class="skill-slots-title">🎯 已装备功法 (' + equippedSkills.length + '/' + (gameState.maxSkillSlots || 3) + ')</div>';
+    html += '<div class="skill-slots-grid">';
+    for (let i = 0; i < (gameState.maxSkillSlots || 3); i++) {
+        const skillId = equippedSkills[i];
+        if (skillId) {
+            const skill = SKILL_LIB[skillId];
+            html += '<div class="skill-slot equipped" style="border-color:' + getRarityColor(skill.rarity) + '">';
+            html += '<div class="skill-slot-name">' + skill.name + '</div>';
+            html += '<div class="skill-slot-desc">' + skill.desc + '</div>';
+            html += '<button class="unequip-btn" onclick="unequipSkill(\'' + skillId + '\')">卸下</button>';
+            html += '</div>';
+        } else {
+            html += '<div class="skill-slot empty">空</div>';
+        }
+    }
+    html += '</div></div>';
+    
+    // 碎片仓库
+    html += '<div class="skill-section">';
+    html += '<div class="section-title">📦 碎片仓库</div>';
+    html += '<div class="fragment-grid">';
+    
     const fragments = gameState.skillFragments || {};
-    // 过滤掉已合成功法的碎片
-    const owned = Object.entries(fragments).filter(([id, count]) => {
+    const ownedFrags = Object.entries(fragments).filter(([id, count]) => {
         const frag = SKILL_FRAGMENTS[id];
         if (!frag) return false;
-        const skillId = frag.skillId;
-        // 不显示已拥有功法的碎片
-        if (ownedSkills.includes(skillId)) return false;
+        if (ownedSkills.includes(frag.skillId)) return false;
         return count > 0;
     });
     
-    if (owned.length === 0) {
-        html += '<div class="empty-tip">暂无碎片</div>';
+    if (ownedFrags.length === 0) {
+        html += '<div class="empty-card">暂无碎片<br><small>击败敌人获得碎片</small></div>';
     } else {
-        owned.forEach(([fragId, count]) => {
+        ownedFrags.forEach(([fragId, count]) => {
             const frag = SKILL_FRAGMENTS[fragId];
-            if (!frag) return;
             const skill = SKILL_LIB[frag.skillId];
-            if (!skill) return;
             const need = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
             const can = count >= need;
-            html += '<div class="fragment-item" style="border-color:' + getRarityColor(skill.rarity) + '">';
-            html += '<div class="fragment-info"><span class="fragment-name">' + fragId.replace('碎片','') + '</span>';
-            html += '<span class="fragment-count">' + count + '/' + need + '</span></div>';
-            html += '<button class="compose-btn ' + (can?'':'disabled') + '" onclick="composeSkill(\'' + fragId + '\')" ' + (can?'':'disabled') + '>' + (can?'合成':'不足') + '</button>';
+            const progress = Math.floor((count / need) * 100);
+            
+            html += '<div class="fragment-card" style="border-color:' + getRarityColor(skill.rarity) + '">';
+            html += '<div class="fragment-icon">💎</div>';
+            html += '<div class="fragment-name">' + fragId.replace('碎片','') + '</div>';
+            html += '<div class="fragment-progress"><div class="progress-bar" style="width:' + progress + '%"></div></div>';
+            html += '<div class="fragment-count">' + count + '/' + need + '</div>';
+            if (can) {
+                html += '<button class="compose-btn-full" onclick="composeSkill(\'' + fragId + '\')">🎨 合成</button>';
+            } else {
+                html += '<div class="fragment-need">还差' + (need - count) + '个</div>';
+            }
             html += '</div>';
         });
     }
     html += '</div></div>';
     
-    html += '<div class="skill-section"><h3>已拥有功法</h3><div class="owned-skill-list">';
-    const ownedSkills = gameState.ownedSkills || [];
+    // 已拥有功法
+    html += '<div class="skill-section">';
+    html += '<div class="section-title">📖 已拥有功法</div>';
+    html += '<div class="skill-grid">';
+    
     if (ownedSkills.length === 0) {
-        html += '<div class="empty-tip">暂无法功</div>';
+        html += '<div class="empty-card">暂无法功<br><small>合成碎片获得功法</small></div>';
     } else {
         ownedSkills.forEach(skillId => {
             const skill = SKILL_LIB[skillId];
             if (!skill) return;
-            const isEquipped = gameState.skills.includes(skillId);
-            const canEquip = !isEquipped && gameState.skills.length < gameState.maxSkillSlots;
+            const isEquipped = equippedSkills.includes(skillId);
             const meetsRealm = gameState.player.realm >= skill.realmReq;
-            html += '<div class="owned-skill-item" style="border-left:3px solid ' + getRarityColor(skill.rarity) + '">';
-            html += '<div class="skill-info"><span class="skill-name">' + skill.name + '</span>';
-            html += '<span class="skill-desc">' + skill.desc + '</span>';
-            if (!meetsRealm) html += '<span class="realm-req">需要:' + REALMS[skill.realmReq].name + '</span></div>';
-            html += '<button class="equip-btn ' + (isEquipped?'equipped':(!canEquip||!meetsRealm?'disabled':'')) + '" ';
-            html += 'onclick="equipSkill(\'' + skillId + '\')" ' + (isEquipped||!canEquip||!meetsRealm?'disabled':'') + '>';
-            html += (isEquipped?'已装备':'装备') + '</button>';
+            
+            html += '<div class="skill-card" style="border-color:' + getRarityColor(skill.rarity) + '">';
+            html += '<div class="skill-rarity">' + ['', '普通', '稀有', '珍贵', '史诗', '传说'][skill.rarity] + '</div>';
+            html += '<div class="skill-name">' + skill.name + '</div>';
+            html += '<div class="skill-desc">' + skill.desc + '</div>';
+            if (!meetsRealm) {
+                html += '<div class="skill-req">需 ' + REALMS[skill.realmReq].name + '</div>';
+            }
+            if (isEquipped) {
+                html += '<div class="skill-equipped">已装备</div>';
+            } else if (meetsRealm && equippedSkills.length < (gameState.maxSkillSlots || 3)) {
+                html += '<button class="equip-btn-full" onclick="equipSkill(\'' + skillId + '\')">装备</button>';
+            }
             html += '</div>';
         });
     }
     html += '</div></div>';
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
     
     html += '<div class="skill-section"><h3>获取途径</h3><div class="skill-tips">';
     html += '<p>击败敌人获得碎片</p><p>通关副本获得奖励</p>';
