@@ -63,6 +63,9 @@ function enemyAttack() {
     let damage = Math.floor(baseDamage * (1 - reduction) - defense * 0.5);
     damage = Math.max(1, damage);
     
+    // 扣除生命值
+    gameState.player.hp = Math.max(0, gameState.player.hp - damage);
+    
     gameState.tempDamage = (gameState.tempDamage || 0) + damage;
     if (gameState.tempDamage >= 10) {
         const expLoss = Math.floor(gameState.tempDamage / 10);
