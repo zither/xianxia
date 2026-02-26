@@ -205,7 +205,14 @@ function renderInventory() {
         
         if (!slotContent && i >= 12) {
             const fragIndex = i - 12;
-            const fragments = Object.entries(gameState.skillFragments || {}).filter(([id, c]) => c > 0);
+            const ownedSkills = gameState.ownedSkills || [];
+            const fragments = Object.entries(gameState.skillFragments || {}).filter(([id, c]) => {
+                const frag = SKILL_FRAGMENTS[id];
+                if (!frag) return false;
+                // 过滤掉已合成功法的碎片
+                if (ownedSkills.includes(frag.skillId)) return false;
+                return c > 0;
+            });
             if (fragIndex < fragments.length) {
                 const [fragId, count] = fragments[fragIndex];
                 const frag = SKILL_FRAGMENTS[fragId];

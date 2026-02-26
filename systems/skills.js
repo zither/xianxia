@@ -101,9 +101,20 @@ function renderSkillPanel() {
     
     let html = '<div class="skill-panel">';
     
+    // 获取已拥有的功法ID列表
+    const ownedSkills = gameState.ownedSkills || [];
+    
     html += '<div class="skill-section"><h3>碎片仓库</h3><div class="fragment-list">';
     const fragments = gameState.skillFragments || {};
-    const owned = Object.entries(fragments).filter(([id, count]) => count > 0);
+    // 过滤掉已合成功法的碎片
+    const owned = Object.entries(fragments).filter(([id, count]) => {
+        const frag = SKILL_FRAGMENTS[id];
+        if (!frag) return false;
+        const skillId = frag.skillId;
+        // 不显示已拥有功法的碎片
+        if (ownedSkills.includes(skillId)) return false;
+        return count > 0;
+    });
     
     if (owned.length === 0) {
         html += '<div class="empty-tip">暂无碎片</div>';
