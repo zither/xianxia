@@ -1,7 +1,7 @@
 /**
  * 仙途 - 修仙挂机游戏
  * 核心游戏逻辑
- * 版本: 1.0.13
+ * 版本: 1.0.14
  */
 
 // ==================== 游戏数据 ====================
@@ -93,7 +93,7 @@ const SKILL_FRAGMENTS = {
 };
 
 // 碎片合成所需数量
-const FRAGMENT合成数量 = {
+const FRAGMENT_COMPOSE_COUNT = {
     1: 3,  // 普通3个
     2: 5,  // 稀有5个
     3: 8,  // 珍贵8个
@@ -511,7 +511,7 @@ function renderSkillPanel() {
             const skill = SKILL_LIB[fragment.skillId];
             if (!skill) return;
             
-            const needCount = FRAGMENT合成数量[skill.rarity] || 3;
+            const needCount = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
             const canCompose = count >= needCount;
             
             html += `
@@ -634,7 +634,7 @@ function composeSkill(fragmentId) {
     if (!skill) return;
     
     const currentCount = gameState.skillFragments[fragmentId] || 0;
-    const needCount = FRAGMENT合成数量[skill.rarity] || 3;
+    const needCount = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
     
     if (currentCount < needCount) {
         showModal('❌ 碎片不足', `合成 ${skill.name} 需要 ${needCount} 个碎片\n当前拥有: ${currentCount} 个`);
