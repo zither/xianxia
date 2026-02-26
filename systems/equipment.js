@@ -138,21 +138,73 @@ function buyFood(foodId) {
     saveGame();
 }
 
-// 吃饭
-function eatFood() {
-    checkMealReset();
-    if (gameState.today.eaten >= 3) {
-        showModal('🍚 吃饱了', `刚吃完不久，还很饱！`);
-        return;
-    }
-    let msg = '🍖 用餐\n\n';
-    FOOD_ITEMS.forEach((food, idx) => msg += `${idx+1}. ${food.name} 饱食+${food.hunger} 体力+${food.energy} (${food.cost}灵石)\n`);
-    msg += '\n输入序号选择';
+function renderInventory() {
+    const container = document.getElementById('inventory-list');
+    if (!container) return;
     
-    const choice = prompt(msg);
-    if (choice === null) return;
-    const idx = parseInt(choice) - 1;
-    if (idx >= 0 && idx < FOOD_ITEMS.length) buyFood(FOOD_ITEMS[idx].id);
+    let html = '<h3>Owned Skills (' + (gameState.ownedSkills || []).length + ')</h3>';
+    html += '<div class="inventory-section">';
+    
+    const ownedSkills = gameState.ownedSkills || [];
+    if (ownedSkills.length === 0) {
+        html += '<div class="empty-tip">No skills yet. Defeat enemies to get fragments!</div>';
+    } else {
+        ownedSkills.forEach(skillId => {
+            const skill = SKILL_LIB[skillId];
+            if (!skill) return;
+            const isEquipped = gameState.skills.includes(skillId);
+            html += '<div class="inventory-item">';
+            html += '<span class="item-name" style="color:' + getRarityColor(skill.rarity) + '">' + skill.name + '</span>';
+            html += '<span class="item-desc">' + skill.desc + '</span>';
+            html += '<span class="item-status">' + (isEquipped ? 'Equipped' : 'Not equipped') + '</span>';
+            html += '</div>';
+        });
+    }
+    html += '</div>';
+    
+    // Fragments
+    html += '<h3>Fragments</h3><div class="inventory-section">';
+    const fragments = gameState.skillFragments || {};
+    const owned = Object.entries(fragments).filter(([id, count]) => count > 0);
+    if (owned.length === 0) {
+        html += '<div class="empty-tip">No fragments yet</div>';
+    } else {
+        owned.forEach(([fragId, count]) => {
+            const frag = SKILL_FRAGMENTS[fragId];
+            if (!frag) return;
+            const skill = SKILL_LIB[frag.skillId];
+            if (!skill) return;
+            const need = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
+            html += '<div class="inventory-item">';
+            html += '<span class="item-name">' + fragId + '</span>';
+            html += '<span class="item-desc">' + count + '/' + need + '</span>';
+            if (count >= need) {
+                html += '<button class="btn-small" onclick="composeSkill(\'' + fragId + '\')">Compose</button>';
+            }
+            html += '</div>';
+        });
+    }
+    html += '</div>';
+    
+    // Equipment
+    html += '<h3>Equipment</h3><div class="inventory-section">';
+    ['weapon', 'armor', 'accessory'].forEach(type => {
+        const id = gameState.equipment[type];
+        if (id) {
+            const items = EQUIPMENT_LIB[type];
+            const item = items.find(e => e.id === id);
+            if (item) {
+                const typeName = {weapon:'Weapon',armor:'Armor',accessory:'Accessory'};
+                html += '<div class="inventory-item">';
+                html += '<span class="item-name">' + typeName[type] + ': ' + item.name + '</span>';
+                html += '<span class="item-desc">ATK:' + (item.attack||0) + ' DEF:' + (item.defense||0) + '</span>';
+                html += '</div>';
+            }
+        }
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
 }
 
 // 吃饭时间重置
@@ -165,4 +217,21 @@ function checkMealReset() {
         gameState.today.eaten = 0;
         lastMealResetTime = now;
     }
+}
+
+
+function eatFood() {
+    checkMealReset();
+    if (gameState.today.eaten >= 3) {
+        showModal('Full', 'You have eaten recently!');
+        return;
+    }
+    let msg = 'Select food:\n\n';
+    FOOD_ITEMS.forEach((food, idx) => msg += (idx+1) + '. ' + food.name + ' Hunger+' + food.hunger + ' Energy+' + food.energy + ' (' + food.cost + ' lingshi)\n');
+    msg += '\nEnter number (0 to cancel)';
+    
+    const choice = prompt(msg);
+    if (choice === null) return;
+    const idx = parseInt(choice) - 1;
+    if (idx >= 0 && idx < FOOD_ITEMS.length) buyFood(FOOD_ITEMS[idx].id);
 }

@@ -106,6 +106,7 @@ function initTabs() {
         'home': document.getElementById('panel-home'),
         'skills': document.getElementById('panel-skills'),
         'food': document.getElementById('panel-food'),
+        'inventory': document.getElementById('panel-inventory'),
         'dungeon': document.getElementById('panel-dungeon'),
         'achievements': document.getElementById('panel-achievements'),
         'profile': document.getElementById('panel-profile')
@@ -120,6 +121,8 @@ function initTabs() {
             if (name === 'achievements') { renderAchievements(); updateAchievementsStats(); }
             if (name === 'food') renderFoodShop();
             if (name === 'dungeon') renderEquipmentShop();
+            if (name === 'skills') renderSkillPanel();
+            if (name === 'inventory') renderInventory();
         });
     });
 }
