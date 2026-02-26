@@ -60,35 +60,50 @@ function upgradeAttribute(attr) {
 }
 
 function renderEquipmentShop() {
-    renderShopType('weapon', EQUIPMENT_LIB.weapon);
-    renderShopType('armor', EQUIPMENT_LIB.armor);
-    renderShopType('accessory', EQUIPMENT_LIB.accessory);
+    // Render as grid
+    const container = document.getElementById('shop-weapon-list');
+    if (container) {
+        container.innerHTML = renderEquipmentGrid('weapon', EQUIPMENT_LIB.weapon);
+    }
+    const container2 = document.getElementById('shop-armor-list');
+    if (container2) {
+        container2.innerHTML = renderEquipmentGrid('armor', EQUIPMENT_LIB.armor);
+    }
+    const container3 = document.getElementById('shop-accessory-list');
+    if (container3) {
+        container3.innerHTML = renderEquipmentGrid('accessory', EQUIPMENT_LIB.accessory);
+    }
 }
 
-function renderShopType(type, items) {
-    const container = document.getElementById('shop-' + type + '-list');
-    if (!container) return;
-    container.innerHTML = '';
+function renderEquipmentGrid(type, items) {
+    let html = '<div class="shop-grid">';
+    const icons = {weapon: '⚔️', armor: '🛡️', accessory: '💍'};
+    const stats = {weapon: '攻击', armor: '防御', accessory: '防御'};
+    const typeName = {weapon: '武器', armor: '防具', accessory: '饰品'};
     
-    const typeNames = { weapon: '武器', armor: '防具', accessory: '饰品' };
-    const statNames = { weapon: '攻击', armor: '防御', accessory: '防御' };
+    html += '<div class="shop-type-header">' + icons[type] + ' ' + typeName[type] + '</div>';
     
     items.forEach(item => {
         const isEquipped = gameState.equipment[type] === item.id;
         const canBuy = gameState.player.lingshi >= item.cost;
-        container.innerHTML += '<div class="shop-item-card ' + (isEquipped?'equipped':'') + '">';
-        container.innerHTML += '<div class="shop-item-info">';
-        container.innerHTML += '<span class="shop-item-name">' + item.name + '</span>';
-        container.innerHTML += '<span class="shop-item-stats">' + statNames[type] + ': ' + (item.attack || item.defense) + '</span>';
-        container.innerHTML += '</div><div>';
+        
+        html += '<div class="shop-slot ' + (isEquipped?'equipped':'') + '">';
+        html += '<div class="shop-slot-icon">' + icons[type] + '</div>';
+        html += '<div class="shop-slot-name">' + item.name + '</div>';
+        html += '<div class="shop-slot-stat">' + stats[type] + ':' + (item.attack || item.defense) + '</div>';
+        
         if (isEquipped) {
-            container.innerHTML += '<span class="shop-item-btn equipped">已装备</span>';
+            html += '<div class="shop-slot-status">已装备</div>';
+        } else if (canBuy) {
+            html += '<button class="shop-slot-btn" onclick="buyEquipment(\'' + type + '\',\'' + item.id + '\')">' + item.cost + '灵石</button>';
         } else {
-            container.innerHTML += '<button class="shop-item-btn ' + (canBuy?'':'disabled') + '" onclick="buyEquipment(\'' + type + '\',\'' + item.id + '\')">购买</button>';
-            container.innerHTML += '<span class="shop-item-price">' + item.cost + '</span>';
+            html += '<div class="shop-slot-status disabled">' + item.cost + '灵石</div>';
         }
-        container.innerHTML += '</div></div>';
+        html += '</div>';
     });
+    
+    html += '</div>';
+    return html;
 }
 
 function renderFoodShop() {
