@@ -2,6 +2,12 @@
  * 功法系统
  */
 
+// 获取功法稀有度颜色
+function getRarityColor(rarity) {
+    const colors = ['', '#888', '#4CAF50', '#2196F3', '#9C27B0', '#FF9800'];
+    return colors[rarity] || '#888';
+}
+
 function dropSkillFragment(enemyRealm) {
     const realm = Math.min(enemyRealm, 8);
     const available = Object.entries(SKILL_FRAGMENTS).filter(([id, frag]) => frag.realmMin <= realm);
