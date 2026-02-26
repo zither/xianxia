@@ -286,7 +286,7 @@ function showItemInfo(itemId, type) {
                 <p style="font-size:16px;font-weight:bold;margin-bottom:10px;">${skill.name}</p>
                 <p style="color:#888;font-size:12px;">稀有度: ${getRarityText(skill.rarity)}</p>
                 <p style="margin:15px 0;">碎片: <span style="color:${canCompose?'#4CAF50':'#f44336'}">${count}</span> / ${need}</p>
-                <button class="btn-primary" style="width:100%;${canCompose?'':'display:none'}" onclick="composeSkill('${itemId}');hideModal();">
+                <button class="btn-primary" style="width:100%;${canCompose?'':'display:none'}" onclick="console.log('compose btn clicked:', '${itemId}');composeSkill('${itemId}');hideModal();">
                     🎨 合成功法
                 </button>
                 ${!canCompose ? '<p style="color:#888;font-size:12px;">碎片不足，还需 ' + (need - count) + ' 个</p>' : ''}

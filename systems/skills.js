@@ -59,11 +59,19 @@ function unequipSkill(skillId) {
 }
 
 function composeSkill(fragmentId) {
+    console.log('composeSkill called:', fragmentId);
     const fragment = SKILL_FRAGMENTS[fragmentId];
-    if (!fragment) return;
+    if (!fragment) {
+        console.log('fragment not found:', fragmentId);
+        return;
+    }
+    
     const skillId = fragment.skillId;
     const skill = SKILL_LIB[skillId];
-    if (!skill) return;
+    if (!skill) {
+        console.log('skill not found:', skillId);
+        return;
+    }
     
     const current = gameState.skillFragments[fragmentId] || 0;
     const need = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
