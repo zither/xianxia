@@ -21,7 +21,7 @@ function init() {
     
     document.getElementById('auto-cultivate').addEventListener('change', (e) => {
         gameState.autoCultivate = e.target.checked;
-        if (gameState.autoCultivate && !gameState.isCultivating) startCultivate();
+        if (gameState.autoCultivate && !gameState.isCultivating && !gameState.currentEnemy && !gameState.inDungeon) startCultivate();
         gameState.autoCultivateUsed = true;
         checkAchievements();
         saveGame();
@@ -52,7 +52,9 @@ function init() {
     let loopCounter = 0;
     setInterval(() => {
         restoreStamina();
-        if (gameState.isCultivating) doCultivate();
+        if (gameState.isCultivating && !gameState.currentEnemy && !gameState.inDungeon) {
+            doCultivate();
+        }
         if (gameState.autoBattle) attack();
         
         loopCounter++;

@@ -747,16 +747,7 @@ function startCultivate() {
 
 function doCultivate() {
     if (!gameState.isCultivating) return;
-    if (gameState.inDungeon) {
-        gameState.isCultivating = false;
-        updateUI();
-        return;
-    }
-    if (gameState.currentEnemy) {
-        gameState.isCultivating = false;
-        updateUI();
-        return;
-    }
+    if (gameState.inDungeon || gameState.currentEnemy) {
         gameState.isCultivating = false;
         updateUI();
         return;
@@ -1535,7 +1526,7 @@ function init() {
         // 恢复饱食度和体力
         restoreStamina();
         
-        if (gameState.isCultivating) {
+        if (gameState.isCultivating && !gameState.currentEnemy && !gameState.inDungeon) {
             doCultivate();
         }
         
