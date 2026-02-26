@@ -274,10 +274,27 @@ function showItemInfo(itemId, type) {
         if (!skill) return;
         const count = gameState.skillFragments[itemId] || 0;
         const need = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
-        let msg = itemId + '\n\n功法: ' + skill.name + '\n稀有度: ' + getRarityText(skill.rarity) + '\n\n' + count + ' / ' + need + ' 碎片';
-        if (count >= need) {
-            msg += '\n\n点击合成！';
-        }
-        showModal('碎片', msg);
+        const canCompose = count >= need;
+        
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        
+        modalTitle.textContent = '📦 ' + itemId;
+        modalMessage.innerHTML = `
+            <div style="text-align:center;padding:10px;">
+                <p style="font-size:16px;font-weight:bold;margin-bottom:10px;">${skill.name}</p>
+                <p style="color:#888;font-size:12px;">稀有度: ${getRarityText(skill.rarity)}</p>
+                <p style="margin:15px 0;">碎片: <span style="color:${canCompose?'#4CAF50':'#f44336'}">${count}</span> / ${need}</p>
+                <button class="btn-primary" style="width:100%;${canCompose?'':'display:none'}" onclick="composeSkill('${itemId}');hideModal();">
+                    🎨 合成功法
+                </button>
+                ${!canCompose ? '<p style="color:#888;font-size:12px;">碎片不足，还需 ' + (need - count) + ' 个</p>' : ''}
+            </div>
+        `;
+        
+        document.getElementById('modal-cancel').style.display = 'inline-block';
+        document.getElementById('modal-cancel').textContent = '关闭';
+        modal.classList.add('show');
     }
 }
