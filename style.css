@@ -1184,3 +1184,49 @@ body {
     z-index: 1000;
     opacity: 0.7;
 }
+
+/* 碎片仓库 */
+.skill-panel { padding: 10px; }
+.skill-section { margin-bottom: 15px; }
+.skill-section h3 { font-size: 14px; margin: 10px 0; color: var(--text-primary); }
+.fragment-list { display: flex; flex-direction: column; gap: 8px; }
+.fragment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+}
+.fragment-info { display: flex; flex-direction: column; }
+.fragment-name { font-weight: bold; color: var(--text-primary); }
+.fragment-count { font-size: 12px; color: var(--text-secondary); }
+.compose-btn {
+    padding: 6px 12px;
+    background: var(--accent-gold);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.compose-btn.disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+.owned-skill-list { display: flex; flex-direction: column; gap: 8px; }
+.skill-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+.skill-info { display: flex; flex-direction: column; }
+.skill-name { font-weight: bold; color: var(--text-primary); }
+.skill-desc { font-size: 12px; color: var(--text-secondary); }
+.skill-level { font-size: 12px; color: var(--accent-gold); }
+.empty-tip { text-align: center; color: var(--text-secondary); padding: 20px; }
