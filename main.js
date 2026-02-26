@@ -53,7 +53,7 @@ function init() {
     setInterval(() => {
         restoreStamina();
         // 战斗和修炼互斥：战斗时自动停止修炼
-        if (gameState.isCultivating && gameState.currentEnemy && !gameState.inDungeon) {
+        if (gameState.isCultivating && (gameState.currentEnemy || gameState.inDungeon)) {
             gameState.isCultivating = false;
             updateUI();
         }
