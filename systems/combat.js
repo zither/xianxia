@@ -6,17 +6,15 @@ let dungeonBattleInterval = null;
 let lastEventTime = 0;
 const eventCooldown = 30;
 
-// 生成敌人
 function spawnEnemy() {
     const realm = Math.min(gameState.player.realm, ENEMIES.length - 1);
     const enemy = ENEMIES[realm];
     const hpScale = 1 + (gameState.player.realm * 0.5);
     gameState.currentEnemy = { ...enemy, baseHp: Math.floor(enemy.baseHp * hpScale) };
     gameState.enemyHp = gameState.currentEnemy.baseHp;
-    addBattleLog(`遭遇 ${gameState.currentEnemy.name}！`, '');
+    addBattleLog('遭遇 ' + gameState.currentEnemy.name + '！', '');
 }
 
-// 攻击
 function attack() {
     if (!gameState.currentEnemy) spawnEnemy();
     if (!checkCanAct()) {
@@ -27,7 +25,7 @@ function attack() {
     
     const damage = getDamage();
     gameState.enemyHp -= damage;
-    addBattleLog(`对 ${gameState.currentEnemy.name} 造成 ${damage} 点伤害！`, 'damage');
+    addBattleLog('对 ' + gameState.currentEnemy.name + ' 造成 ' + damage + ' 点伤害！', 'damage');
     gameState.stats.totalDamage = (gameState.stats.totalDamage || 0) + damage;
     gameState.player.energy = Math.max(0, gameState.player.energy - 2);
     
@@ -39,11 +37,11 @@ function attack() {
         gameState.player.lingshi += lingshi;
         
         const fragmentId = dropSkillFragment(gameState.player.realm);
-        if (fragmentId) addBattleLog(`💎 获得 ${fragmentId}！`, 'loot');
+        if (fragmentId) addBattleLog('获得 ' + fragmentId + '！', 'loot');
         
         gameState.stats.enemiesDefeated = (gameState.stats.enemiesDefeated || 0) + 1;
         gameState.stats.consecutiveWins = (gameState.stats.consecutiveWins || 0) + 1;
-        addBattleLog(`击败 ${enemy.name}！获得 ${exp} 修为, ${lingshi} 灵石`, 'loot');
+        addBattleLog('击败 ' + enemy.name + '！获得 ' + exp + ' 修为, ' + lingshi + ' 灵石', 'loot');
         
         spawnEnemy();
         gameState.enemyJustDefeated = true;
@@ -57,7 +55,6 @@ function attack() {
     saveGame();
 }
 
-// 敌人反击
 function enemyAttack() {
     if (!gameState.currentEnemy) return;
     const baseDamage = Math.floor(3 + gameState.player.realm * 1.5);
@@ -72,11 +69,10 @@ function enemyAttack() {
         gameState.player.exp = Math.max(0, gameState.player.exp - expLoss);
         gameState.tempDamage = gameState.tempDamage % 10;
     }
-    addBattleLog(`受到 ${damage} 点反击伤害！`, 'damage');
+    addBattleLog('受到 ' + damage + ' 点反击伤害！', 'damage');
 }
 
-// 添加战斗日志
-function addBattleLog(msg, type = '') {
+function addBattleLog(msg, type) {
     const log = document.getElementById('battle-log');
     if (!log) return;
     const entry = document.createElement('div');
@@ -86,13 +82,12 @@ function addBattleLog(msg, type = '') {
     while (log.children.length > 20) log.removeChild(log.lastChild);
 }
 
-// 副本系统
 function enterDungeon(index) {
     if (index >= DUNGEONS.length) { showModal('提示', '副本尚未解锁'); return; }
     const dungeon = DUNGEONS[index];
     
-    if (gameState.inDungeon) { showModal('提示', '你正在挑战副本中'); return; }
-    if (gameState.player.realm < dungeon.minRealm) { showModal('境界不足', `需要 ${REALMS[dungeon.minRealm].name}`); return; }
+    if (gameState.inDungeon) { showModal('提示', '正在挑战副本中'); return; }
+    if (gameState.player.realm < dungeon.minRealm) { showModal('境界不足', '需要 ' + REALMS[dungeon.minRealm].name); return; }
     
     const originalAutoBattle = gameState.autoBattle;
     gameState.autoBattle = false;
@@ -101,7 +96,7 @@ function enterDungeon(index) {
     gameState.dungeonEnemiesDefeated = 0;
     
     updateDungeonButtons(true);
-    showModal('副本挑战', `正在挑战 ${dungeon.name}...击败 ${dungeon.enemies} 个敌人`);
+    showModal('副本挑战', '正在挑战 ' + dungeon.name + '...\n击败 ' + dungeon.enemies + ' 个敌人');
     
     if (dungeonBattleInterval) clearInterval(dungeonBattleInterval);
     
@@ -113,7 +108,7 @@ function enterDungeon(index) {
         if (gameState.enemyJustDefeated) {
             gameState.dungeonEnemiesDefeated++;
             gameState.enemyJustDefeated = false;
-            addBattleLog(`击败敌人 ${gameState.dungeonEnemiesDefeated}/${dungeon.enemies}`, 'loot');
+            addBattleLog('击败敌人 ' + gameState.dungeonEnemiesDefeated + '/' + dungeon.enemies, 'loot');
             
             if (gameState.dungeonEnemiesDefeated >= dungeon.enemies) {
                 clearInterval(dungeonBattleInterval);
@@ -129,7 +124,7 @@ function enterDungeon(index) {
                 gameState.player.exp += dungeon.reward * 2;
                 gameState.stats.dungeonsCleared = (gameState.stats.dungeonsCleared || 0) + 1;
                 
-                showModal('🎉 副本完成', `恭喜通关 ${dungeon.name}！获得 ${dungeon.reward} 灵石, ${dungeon.reward * 2} 修为`);
+                showModal('副本完成', '恭喜通关 ' + dungeon.name + '！\n获得 ' + dungeon.reward + ' 灵石, ' + dungeon.reward * 2 + ' 修为');
                 updateUI();
                 saveGame();
             }

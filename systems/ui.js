@@ -13,10 +13,10 @@ function updateUI() {
     
     const expPercent = nextRealm ? Math.min(100, (gameState.player.exp / nextRealm.expReq) * 100) : 100;
     document.getElementById('exp-fill').style.width = expPercent + '%';
-    document.getElementById('exp-text').textContent = nextRealm ? `${formatNumber(gameState.player.exp)} / ${formatNumber(nextRealm.expReq)}` : '已满级';
+    document.getElementById('exp-text').textContent = nextRealm ? formatNumber(gameState.player.exp) + ' / ' + formatNumber(nextRealm.expReq) : '已满级';
     
     document.getElementById('xiuwei').textContent = formatNumber(gameState.player.exp);
-    document.getElementById('cultivate-speed').textContent = `+${getCultivateSpeed()}/秒`;
+    document.getElementById('cultivate-speed').textContent = '+' + getCultivateSpeed() + '/秒';
     document.getElementById('auto-cultivate').checked = gameState.autoCultivate;
     document.getElementById('btn-cultivate').textContent = gameState.isCultivating ? '修炼中...' : '开始修炼';
     document.getElementById('btn-cultivate').classList.toggle('cultivating', gameState.isCultivating);
@@ -24,9 +24,9 @@ function updateUI() {
     renderSkills();
     
     if (gameState.currentEnemy) {
-        document.getElementById('enemy-name').textContent = `lv.${gameState.player.realm + 1} ${gameState.currentEnemy.name}`;
+        document.getElementById('enemy-name').textContent = 'lv.' + (gameState.player.realm + 1) + ' ' + gameState.currentEnemy.name;
         document.getElementById('enemy-hp-fill').style.width = Math.max(0, (gameState.enemyHp / gameState.currentEnemy.baseHp) * 100) + '%';
-        document.getElementById('enemy-hp-text').textContent = `${Math.floor(gameState.enemyHp)}/${gameState.currentEnemy.baseHp}`;
+        document.getElementById('enemy-hp-text').textContent = Math.floor(gameState.enemyHp) + '/' + gameState.currentEnemy.baseHp;
     }
     
     document.getElementById('btn-auto-battle').textContent = gameState.autoBattle ? '停止自动' : '自动战斗';
@@ -42,7 +42,7 @@ function updateAttributesPanel() {
         if (el) el.textContent = gameState.player[attr];
     });
     const tip = document.getElementById('attr-tip');
-    if (tip) tip.textContent = `点击 + 提升属性（下次消耗 ${getAttributeCost('rootBone')} 灵石）`;
+    if (tip) tip.textContent = '点击 + 提升属性（下次数: ' + getAttributeCost('rootBone') + ' 灵石）';
 }
 
 function updateEquipmentPanel() {
@@ -52,7 +52,7 @@ function updateEquipmentPanel() {
             const id = gameState.equipment[type];
             if (id) {
                 const item = EQUIPMENT_LIB[type].find(e => e.id === id);
-                el.innerHTML = `<span class="equipped-name">${item.name}</span>`;
+                el.innerHTML = '<span class="equipped-name">' + item.name + '</span>';
             } else el.innerHTML = '<span class="no-equip">未装备</span>';
         }
     });
@@ -80,16 +80,16 @@ function renderSkills() {
     gameState.skills.forEach(skillId => {
         const skill = SKILL_LIB[skillId];
         if (!skill) return;
-        container.innerHTML += `<div class="skill-item">
-            <div class="skill-info"><span class="skill-name">${skill.name}</span>
-            <span class="skill-desc">${skill.desc}</span></div>
-            <span class="skill-level">${getRarityText(skill.rarity)}</span>
-        </div>`;
+        container.innerHTML += '<div class="skill-item">';
+        container.innerHTML += '<div class="skill-info"><span class="skill-name">' + skill.name + '</span>';
+        container.innerHTML += '<span class="skill-desc">' + skill.desc + '</span></div>';
+        container.innerHTML += '<span class="skill-level">' + getRarityText(skill.rarity) + '</span>';
+        container.innerHTML += '</div>';
     });
     if (gameState.skills.length === 0) container.innerHTML = '<div class="empty-tip">还没有装备功法</div>';
 }
 
-function showModal(title, message, showCancel = false) {
+function showModal(title, message, showCancel) {
     document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-message').textContent = message;
     document.getElementById('modal-cancel').style.display = showCancel ? 'inline-block' : 'none';

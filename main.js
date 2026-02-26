@@ -2,7 +2,6 @@
  * 游戏主入口
  */
 
-// 初始化
 function init() {
     loadGame();
     
@@ -11,7 +10,6 @@ function init() {
     recordPlayTime();
     applyOfflineEarnings();
     
-    // 绑定事件
     document.getElementById('btn-cultivate').addEventListener('click', () => {
         startCultivate();
         if (gameState.isCultivating) {
@@ -43,7 +41,7 @@ function init() {
     });
     
     document.getElementById('btn-learn-skill').addEventListener('click', () => {
-        showModal('📚 功法系统', '功法无法直接购买！\n\n💡 获取途径：\n• 击败敌人掉落功法碎片\n• 副本首通奖励\n• 随机事件奇遇\n• 境界突破奖励\n• 神秘商人处购买\n\n收集碎片后可合成功法！');
+        showModal('功法系统', '功法无法直接购买！\n\n获取途径：\n击败敌人掉落功法碎片\n副本首通奖励\n随机事件奇遇\n境界突破奖励\n神秘商人处购买\n\n收集碎片后可合成功法！');
     });
     document.getElementById('btn-reset-game')?.addEventListener('click', resetGame);
     document.getElementById('modal-confirm').addEventListener('click', hideModal);
@@ -51,7 +49,6 @@ function init() {
     
     initTabs();
     
-    // 游戏循环
     let loopCounter = 0;
     setInterval(() => {
         restoreStamina();
@@ -71,7 +68,6 @@ function init() {
     console.log('仙途游戏初始化完成！');
 }
 
-// 离线收益
 function calculateOfflineEarnings() {
     if (!gameState.lastPlayTime) return { exp: 0, lingqi: 0 };
     const offlineMinutes = Math.floor((Date.now() - gameState.lastPlayTime) / 1000 / 60);
@@ -93,7 +89,7 @@ function applyOfflineEarnings() {
     if (earnings.exp > 0 || earnings.lingqi > 0) {
         gameState.player.exp += earnings.exp;
         gameState.player.lingqi += earnings.lingqi;
-        showModal('📥 离线收益', `离线收益\n修为 +${formatNumber(earnings.exp)}\n灵气 +${formatNumber(earnings.lingqi)}`);
+        showModal('离线收益', '离线收益\n修为 +' + formatNumber(earnings.exp) + '\n灵气 +' + formatNumber(earnings.lingqi));
     }
 }
 
@@ -102,5 +98,4 @@ function recordPlayTime() {
     saveGame();
 }
 
-// 启动
 document.addEventListener('DOMContentLoaded', init);

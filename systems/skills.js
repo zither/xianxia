@@ -87,12 +87,12 @@ function renderSkillPanel() {
     
     let html = '<div class="skill-panel">';
     
-    html += '<div class="skill-section"><h3>Fragment Warehouse</h3><div class="fragment-list">';
+    html += '<div class="skill-section"><h3>碎片仓库</h3><div class="fragment-list">';
     const fragments = gameState.skillFragments || {};
     const owned = Object.entries(fragments).filter(([id, count]) => count > 0);
     
     if (owned.length === 0) {
-        html += '<div class="empty-tip">No fragments yet</div>';
+        html += '<div class="empty-tip">暂无碎片</div>';
     } else {
         owned.forEach(([fragId, count]) => {
             const frag = SKILL_FRAGMENTS[fragId];
@@ -102,18 +102,18 @@ function renderSkillPanel() {
             const need = FRAGMENT_COMPOSE_COUNT[skill.rarity] || 3;
             const can = count >= need;
             html += '<div class="fragment-item" style="border-color:' + getRarityColor(skill.rarity) + '">';
-            html += '<div class="fragment-info"><span class="fragment-name">' + fragId.replace('Fragment','') + '</span>';
+            html += '<div class="fragment-info"><span class="fragment-name">' + fragId.replace('碎片','') + '</span>';
             html += '<span class="fragment-count">' + count + '/' + need + '</span></div>';
-            html += '<button class="compose-btn ' + (can?'':'disabled') + '" onclick="composeSkill(\'' + fragId + '\')" ' + (can?'':'disabled') + '>' + (can?'Compose':'Insufficient') + '</button>';
+            html += '<button class="compose-btn ' + (can?'':'disabled') + '" onclick="composeSkill(\'' + fragId + '\')" ' + (can?'':'disabled') + '>' + (can?'合成':'不足') + '</button>';
             html += '</div>';
         });
     }
     html += '</div></div>';
     
-    html += '<div class="skill-section"><h3>Owned Skills</h3><div class="owned-skill-list">';
+    html += '<div class="skill-section"><h3>已拥有功法</h3><div class="owned-skill-list">';
     const ownedSkills = gameState.ownedSkills || [];
     if (ownedSkills.length === 0) {
-        html += '<div class="empty-tip">No skills yet</div>';
+        html += '<div class="empty-tip">暂无法功</div>';
     } else {
         ownedSkills.forEach(skillId => {
             const skill = SKILL_LIB[skillId];
@@ -124,18 +124,18 @@ function renderSkillPanel() {
             html += '<div class="owned-skill-item" style="border-left:3px solid ' + getRarityColor(skill.rarity) + '">';
             html += '<div class="skill-info"><span class="skill-name">' + skill.name + '</span>';
             html += '<span class="skill-desc">' + skill.desc + '</span>';
-            if (!meetsRealm) html += '<span class="realm-req">Req:' + REALMS[skill.realmReq].name + '</span></div>';
+            if (!meetsRealm) html += '<span class="realm-req">需要:' + REALMS[skill.realmReq].name + '</span></div>';
             html += '<button class="equip-btn ' + (isEquipped?'equipped':(!canEquip||!meetsRealm?'disabled':'')) + '" ';
             html += 'onclick="equipSkill(\'' + skillId + '\')" ' + (isEquipped||!canEquip||!meetsRealm?'disabled':'') + '>';
-            html += (isEquipped?'Equipped':'Equip') + '</button>';
+            html += (isEquipped?'已装备':'装备') + '</button>';
             html += '</div>';
         });
     }
     html += '</div></div>';
     
-    html += '<div class="skill-section"><h3>How to Get</h3><div class="skill-tips">';
-    html += '<p>Defeat enemies for fragments</p><p>Complete dungeons for rewards</p>';
-    html += '<p>Random events</p><p>Realm breakthrough rewards</p><p>Mystery merchant</p></div></div>';
+    html += '<div class="skill-section"><h3>获取途径</h3><div class="skill-tips">';
+    html += '<p>击败敌人获得碎片</p><p>通关副本获得奖励</p>';
+    html += '<p>随机事件</p><p>境界突破奖励</p><p>神秘商人</p></div></div>';
     
     html += '</div>';
     container.innerHTML = html;
