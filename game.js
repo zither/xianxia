@@ -719,6 +719,10 @@ function checkRealmUp() {
 
 // 修炼系统
 function startCultivate() {
+    if (gameState.inDungeon) {
+        showModal('提示', '战斗状态下无法修炼');
+        return;
+    }
     if (gameState.isCultivating) {
         gameState.isCultivating = false;
     } else {
@@ -729,6 +733,11 @@ function startCultivate() {
 
 function doCultivate() {
     if (!gameState.isCultivating) return;
+    if (gameState.inDungeon) {
+        gameState.isCultivating = false;
+        updateUI();
+        return;
+    }
     
     // 瓶颈效率
     const efficiency = checkBottleneck();
@@ -1087,6 +1096,10 @@ const DUNGEONS = [
 ];
 
 function enterDungeon(dungeonIndex) {
+    if (gameState.isCultivating) {
+        gameState.isCultivating = false;
+        showModal('提示', '已停止修炼');
+    }
     if (dungeonIndex >= DUNGEONS.length) {
         showModal('提示', '副本尚未解锁');
         return;
