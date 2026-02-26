@@ -52,6 +52,11 @@ function init() {
     let loopCounter = 0;
     setInterval(() => {
         restoreStamina();
+        // 战斗和修炼互斥：战斗时自动停止修炼
+        if (gameState.isCultivating && gameState.currentEnemy && !gameState.inDungeon) {
+            gameState.isCultivating = false;
+            updateUI();
+        }
         if (gameState.isCultivating && !gameState.currentEnemy && !gameState.inDungeon) {
             doCultivate();
         }

@@ -1,7 +1,7 @@
 /**
  * 仙途 - 修仙挂机游戏
  * 核心游戏逻辑
- * 版本: 1.0.2
+ * 版本: 1.0.5
  */
 
 // ==================== 游戏数据 ====================
@@ -1525,6 +1525,12 @@ function init() {
     function gameLoop() {
         // 恢复饱食度和体力
         restoreStamina();
+        
+        // 战斗和修炼互斥：战斗时自动停止修炼
+        if (gameState.isCultivating && gameState.currentEnemy && !gameState.inDungeon) {
+            gameState.isCultivating = false;
+            updateUI();
+        }
         
         if (gameState.isCultivating && !gameState.currentEnemy && !gameState.inDungeon) {
             doCultivate();
