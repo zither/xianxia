@@ -955,31 +955,40 @@ function updateAchievementsStats() {
     if (statDungeons) statDungeons.textContent = formatNumber(gameState.stats?.dungeonsCleared || 0);
 }
 
-// ==================== 离线收益 ====================
-
-let lastSaveTime = Date.now();
+// ==================== 离线收益（真实修仙时间）====================
+// 现实15分钟 = 游戏内1天
 
 function calculateOfflineEarnings() {
     if (!gameState.lastPlayTime) return 0;
     
     const now = Date.now();
-    const offlineSeconds = Math.floor((now - gameState.lastPlayTime) / 1000);
+    const offlineMinutes = Math.floor((now - gameState.lastPlayTime) / 1000 / 60); // 离线分钟数
     
-    // 最多计算24小时的离线收益
-    const maxOfflineSeconds = 24 * 60 * 60;
-    const effectiveSeconds = Math.min(offlineSeconds, maxOfflineSeconds);
+    // 离线时间太短不计算
+    if (offlineMinutes < 1) return 0;
     
-    if (effectiveSeconds < 60) return 0; // 少于1分钟不计
+    // 游戏内经过的天数（每15分钟=1天）
+    const gameDays = Math.floor(offlineMinutes / 15);
     
-    // 计算收益
+    // 离线最多计算30天（现实30分钟=2小时游戏时间）
+    const maxGameDays = 30;
+    const effectiveDays = Math.min(gameDays, maxGameDays);
+    
+    if (effectiveDays < 1) return 0;
+    
+    // 计算收益（按天计算，假设每秒1次修炼循环，每天100次修炼）
     const speed = getCultivateSpeed();
     const lingqiGain = getLingqiGain();
     
-    const xiuxei = speed * effectiveSeconds;
-    const lingqi = lingqiGain * effectiveSeconds;
+    const dailyXiuxei = speed * 100;
+    const dailyLingqi = lingqiGain * 100;
+    
+    const xiuxei = Math.floor(dailyXiuxei * effectiveDays);
+    const lingqi = Math.floor(dailyLingqi * effectiveDays);
     
     return {
-        seconds: effectiveSeconds,
+        minutes: offlineMinutes,
+        gameDays: effectiveDays,
         xiuxei: xiuxei,
         lingqi: lingqi
     };
@@ -993,25 +1002,11 @@ function applyOfflineEarnings() {
         gameState.player.lingqi += earnings.lingqi;
         
         showModal('📥 离线收益', 
-            `离线 ${formatOfflineTime(earnings.seconds)} 修炼收益：\n\n` +
+            `离线 ${earnings.minutes}分钟 = 游戏内 ${earnings.gameDays}天\n\n` +
             `修为 +${formatNumber(earnings.xiuxei)}\n` +
             `灵气 +${formatNumber(earnings.lingqi)}`
         );
     }
-}
-
-// 离线收益时间格式化
-function formatOfflineTime(seconds) {
-    if (seconds >= 86400) {
-        const days = Math.floor(seconds / 86400);
-        const hours = Math.floor((seconds % 86400) / 3600);
-        return `${days}天${hours}小时`;
-    } else if (seconds >= 3600) {
-        return `${Math.floor(seconds / 3600)}小时${Math.floor((seconds % 3600) / 60)}分钟`;
-    } else if (seconds >= 60) {
-        return `${Math.floor(seconds / 60)}分钟`;
-    }
-    return `${seconds}秒`;
 }
 
 // 记录最后在线时间
@@ -1531,17 +1526,30 @@ function checkCanAct() {
     return true;
 }
 
+// 真实修仙时间系统
+// 现实15分钟 = 游戏内1天
+const GAME_TIME_MULTIPLIER = 96; // 现实1天 = 游戏内96天
+
+// 上次重置进食的时间戳
+let lastMealResetTime = Date.now();
+const MEAL_RESET_INTERVAL = 15 * 60 * 1000; // 15分钟（现实时间）重置进食次数
+
+// 检查并重置进食次数
+function checkMealReset() {
+    const now = Date.now();
+    if (now - lastMealResetTime >= MEAL_RESET_INTERVAL) {
+        gameState.today.eaten = 0;
+        lastMealResetTime = now;
+    }
+}
+
 // 吃饭恢复
 function eatFood() {
-    // 检查今天吃饭次数
-    const today = new Date().toDateString();
-    if (gameState.today.date !== today) {
-        gameState.today.date = today;
-        gameState.today.eaten = 0;
-    }
+    // 检查今天吃饭次数（实际是每15分钟重置）
+    checkMealReset();
     
     if (gameState.today.eaten >= 3) {
-        showModal('🍚 吃饱了', '今天已经吃了很多了，明天再来吧！');
+        showModal('🍚 吃饱了', `刚吃完不久，还很饱！\n${Math.ceil((MEAL_RESET_INTERVAL - (Date.now() - lastMealResetTime)) / 60000)}分钟后可以再吃。`);
         return;
     }
     
@@ -1807,12 +1815,8 @@ function renderFoodShop() {
     
     container.innerHTML = '';
     
-    // 检查今天吃饭次数
-    const today = new Date().toDateString();
-    if (gameState.today.date !== today) {
-        gameState.today.date = today;
-        gameState.today.eaten = 0;
-    }
+    // 使用新的时间系统检查进食次数
+    checkMealReset();
     
     const remainingMeals = 3 - (gameState.today.eaten || 0);
     
@@ -1841,14 +1845,11 @@ function buyFood(foodId) {
     const food = FOOD_ITEMS.find(f => f.id === foodId);
     if (!food) return;
     
-    const today = new Date().toDateString();
-    if (gameState.today.date !== today) {
-        gameState.today.date = today;
-        gameState.today.eaten = 0;
-    }
+    // 使用新的时间系统
+    checkMealReset();
     
     if (gameState.today.eaten >= 3) {
-        showModal('🍚 吃饱了', '今天已经吃了很多了，明天再来吧！');
+        showModal('🍚 吃饱了', `刚吃完不久，还很饱！\n${Math.ceil((MEAL_RESET_INTERVAL - (Date.now() - lastMealResetTime)) / 60000)}分钟后可以再吃。`);
         return;
     }
     
