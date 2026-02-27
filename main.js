@@ -56,7 +56,28 @@ function init() {
     
     initTabs();
     
-    // 首次保存
+    let loopCounter = 0;
+    setInterval(() => {
+        restoreStamina();
+        // 战斗和修炼互斥：用autoBattle判断是否在战斗
+        if (gameState.isCultivating && (gameState.autoBattle || gameState.inDungeon)) {
+            gameState.isCultivating = false;
+            updateUI();
+        }
+        if (gameState.isCultivating && !gameState.autoBattle && !gameState.inDungeon) {
+            doCultivate();
+        }
+        if (gameState.autoBattle) attack();
+        
+        loopCounter++;
+        if (loopCounter >= 10) {
+            loopCounter = 0;
+            recordPlayTime();
+            checkAchievements();
+        }
+    }, 1000);
+    
+    saveGame();
     updateUI();
     console.log('仙途游戏初始化完成！');
 }

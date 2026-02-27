@@ -1,7 +1,7 @@
 /**
  * 仙途 - 修仙挂机游戏
  * 核心游戏逻辑
- * 版本: 1.0.22
+ * 版本: 1.0.21
  */
 
 // ==================== 游戏数据 ====================
@@ -1350,8 +1350,10 @@ function checkAchievements() {
 }
 
 function showAchievementNotification(achievements) {
-    achievements.forEach((ach) => {
-        showModal('🏆 成就解锁！', `【${ach.name}】\n${ach.desc}`);
+    achievements.forEach((ach, index) => {
+        setTimeout(() => {
+            showModal('🏆 成就解锁！', `【${ach.name}】\n${ach.desc}`);
+        }, index * 500);
     });
 }
 
@@ -1548,6 +1550,8 @@ function init() {
             checkAchievements();
         }
     }
+    
+    setInterval(gameLoop, 1000);
     
     // 首次保存
     saveGame();
