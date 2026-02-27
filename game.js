@@ -1350,10 +1350,8 @@ function checkAchievements() {
 }
 
 function showAchievementNotification(achievements) {
-    achievements.forEach((ach, index) => {
-        setTimeout(() => {
-            showModal('🏆 成就解锁！', `【${ach.name}】\n${ach.desc}`);
-        }, index * 500);
+    achievements.forEach((ach) => {
+        showModal('🏆 成就解锁！', `【${ach.name}】\n${ach.desc}`);
     });
 }
 
@@ -1550,8 +1548,6 @@ function init() {
             checkAchievements();
         }
     }
-    
-    setInterval(gameLoop, 1000);
     
     // 首次保存
     saveGame();
