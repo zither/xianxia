@@ -67,7 +67,7 @@ const SKILL_FRAGMENTS = {
     
     // 珍贵碎片 - 金丹期
     '九转丹诀碎片': { skillId: '九转丹诀', dropRate: 0.03, realmMin: 2 },
-    '天雷破碎片': { name: '天雷破', dropRate: 0.03, realmMin: 2 },
+    '天雷破碎片': { skillId: '天雷破', dropRate: 0.03, realmMin: 2 },
     '金刚不坏碎片': { skillId: '金刚不坏', dropRate: 0.03, realmMin: 2 },
     '天眼通碎片': { skillId: '天眼通', dropRate: 0.03, realmMin: 2 },
     
