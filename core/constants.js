@@ -135,10 +135,12 @@ const EQUIPMENT_LIB = {
 
 // 食物数据
 const FOOD_ITEMS = [
-    { id: '粗茶淡饭', name: '粗茶淡饭', hunger: 20, energy: 10, cost: 5, icon: '🥣' },
-    { id: '灵米粥', name: '灵米粥', hunger: 40, energy: 20, cost: 20, icon: '🥣' },
-    { id: '灵禽肉', name: '灵禽肉', hunger: 60, energy: 30, cost: 50, icon: '🍖' },
-    { id: '千年灵果', name: '千年灵果', hunger: 100, energy: 50, cost: 200, icon: '🍎' }
+    { id: '粗茶淡饭', name: '粗茶淡饭', hunger: 20, energy: 10, cost: 5, icon: '🥣', category: 'noodles' },
+    { id: '灵米粥', name: '灵米粥', hunger: 40, energy: 20, cost: 20, icon: '🥣', category: 'noodles' },
+    { id: '灵泉', name: '灵泉', hunger: 0, energy: 30, cost: 15, icon: '💧', category: 'drinks' },
+    { id: '灵茶', name: '灵茶', hunger: 5, energy: 25, cost: 25, icon: '🍵', category: 'drinks' },
+    { id: '灵禽肉', name: '灵禽肉', hunger: 60, energy: 30, cost: 50, icon: '🍖', category: 'special' },
+    { id: '千年灵果', name: '千年灵果', hunger: 100, energy: 50, cost: 200, icon: '🍎', category: 'special' }
 ];
 
 // 副本配置

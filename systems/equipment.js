@@ -107,22 +107,42 @@ function renderEquipmentGrid(type, items) {
 }
 
 function renderFoodShop() {
-    const container = document.getElementById('food-shop-list');
-    if (!container) return;
-    container.innerHTML = '';
+    const categories = {
+        noodles: { el: document.getElementById('food-noodles-list'), icon: '🍜', name: '面食' },
+        drinks: { el: document.getElementById('food-drinks-list'), icon: '🧋', name: '饮品' },
+        special: { el: document.getElementById('food-special-list'), icon: '🍱', name: '特色' }
+    };
     
     checkMealReset();
     const remainingMeals = 3 - (gameState.today.eaten || 0);
     
-    FOOD_ITEMS.forEach(food => {
-        const canBuy = gameState.player.lingshi >= food.cost && remainingMeals > 0;
-        container.innerHTML += '<div class="food-item">';
-        container.innerHTML += '<span class="food-icon">' + food.icon + '</span>';
-        container.innerHTML += '<div class="food-info"><div class="food-name">' + food.name + '</div>';
-        container.innerHTML += '<div class="food-effects">饱食+' + food.hunger + ' 体力+' + food.energy + '</div></div>';
-        container.innerHTML += '<span class="food-price">' + food.cost + '灵石</span>';
-        container.innerHTML += '<button class="food-buy-btn ' + (canBuy?'':'disabled') + '" onclick="buyFood(\'' + food.id + '\')">购买</button>';
-        container.innerHTML += '</div>';
+    Object.keys(categories).forEach(cat => {
+        const container = categories[cat].el;
+        if (!container) return;
+        
+        const foods = FOOD_ITEMS.filter(f => f.category === cat);
+        
+        let html = '<div class="shop-grid">';
+        html += '<div class="shop-type-header">' + categories[cat].icon + ' ' + categories[cat].name + '</div>';
+        
+        foods.forEach(food => {
+            const canBuy = gameState.player.lingshi >= food.cost && remainingMeals > 0;
+            
+            html += '<div class="shop-slot">';
+            html += '<div class="shop-slot-icon">' + food.icon + '</div>';
+            html += '<div class="shop-slot-name">' + food.name + '</div>';
+            html += '<div class="shop-slot-stat">饱食+' + food.hunger + ' 体力+' + food.energy + '</div>';
+            
+            if (canBuy) {
+                html += '<button class="shop-slot-btn" onclick="buyFood(\'' + food.id + '\')">' + food.cost + '灵石</button>';
+            } else {
+                html += '<div class="shop-slot-status disabled">' + food.cost + '灵石</div>';
+            }
+            html += '</div>';
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
     });
 }
 

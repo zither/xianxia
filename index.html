@@ -171,12 +171,22 @@
                 </section>
             </div>
 
-            <!-- 食物商店 -->
+            <!-- 餐馆页面 -->
             <div id="panel-food" style="display: none;">
                 <section class="panel">
                     <h2>🍖 餐馆</h2>
-                    <p class="shop-tip">每天可用餐3次</p>
-                    <div class="food-list" id="food-shop-list"></div>
+                    <div class="shop-list">
+                        <h3>🍜 面食</h3>
+                        <div class="shop-items" id="food-noodles-list"></div>
+                    </div>
+                    <div class="shop-list">
+                        <h3>🧋 饮品</h3>
+                        <div class="shop-items" id="food-drinks-list"></div>
+                    </div>
+                    <div class="shop-list">
+                        <h3>🍱 特色</h3>
+                        <div class="shop-items" id="food-special-list"></div>
+                    </div>
                 </section>
             </div>
 
@@ -330,6 +340,7 @@
     <script src="core/constants.js"></script>
     <script src="core/state.js"></script>
     <script src="core/calc.js"></script>
+    <script src="game.js"></script>
     <script src="systems/cultivation.js"></script>
     <script src="systems/combat.js"></script>
     <script src="systems/skills.js"></script>
